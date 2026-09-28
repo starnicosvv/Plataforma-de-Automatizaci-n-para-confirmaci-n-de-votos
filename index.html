@@ -936,6 +936,17 @@ function updateStats() {
                     saveDemoData();
                     updateStats();
                 } else {
+                    if (!sbClient) {
+                        showToast('No hay conexión a Supabase. Configure primero en "Config".', 'error');
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = `
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                REGISTRAR
+                            `;
+                        }
+                        return;
+                    }
                     const updateData = {
                         ya_registrado: true,
                         fecha_registro: now,
@@ -1128,6 +1139,15 @@ if (demoMode) {
                 saveDemoData();
                 updateStats();
             } else {
+                if (!sbClient) {
+                    showToast('No hay conexión a Supabase. Configure primero en "Config".', 'error');
+                    isImporting = false;
+                    $('#import-btn').disabled = false;
+                    $('#import-btn').textContent = 'Importar Padrón';
+                    $('#cancel-import').disabled = false;
+                    $('#import-progress').classList.add('hidden');
+                    return;
+                }
                 for (let i = 0; i < data.length; i += batchSize) {
                     const batch = data.slice(i, i + batchSize);
                     const progress = Math.round(((i + batch.length) / data.length) * 100);
