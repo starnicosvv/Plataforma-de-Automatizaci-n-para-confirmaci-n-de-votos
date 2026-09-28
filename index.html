@@ -98,7 +98,92 @@
         </div>
     </div>
 
-    <!-- Main App -->
+    <!-- Log Activity Modal -->
+    <div id="log-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[80vh] flex flex-col card-enter">
+            <div class="flex items-center justify-between mb-4 p-4 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-900">Log de Actividad</h2>
+                <button id="close-log" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <div class="p-4 border-b border-gray-200 flex flex-wrap gap-3 items-center">
+                <label class="flex items-center gap-2 text-sm text-gray-700">
+                    <span>Filtrar por usuario:</span>
+                    <select id="log-filter-user" class="px-3 py-2 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20 text-sm">
+                        <option value="">Todos los usuarios</option>
+                    </select>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-700">
+                    <span>Tipo:</span>
+                    <select id="log-filter-action" class="px-3 py-2 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20 text-sm">
+                        <option value="">Todos los tipos</option>
+                        <option value="CONSULTA">Consultas</option>
+                        <option value="REGISTRO">Registros</option>
+                    </select>
+                </label>
+                <button id="log-clear-filters" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 font-medium">Limpiar filtros</button>
+                <button id="log-export" class="ml-auto px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Exportar CSV
+                </button>
+            </div>
+            <div id="log-list" class="flex-1 overflow-y-auto p-4 max-h-[50vh]"></div>
+            <div class="p-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex items-center justify-between">
+                <span id="log-count" class="text-sm text-gray-500">0 registros</span>
+                <button id="log-close-bottom" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-medium">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Imported Data Modal -->
+    <div id="view-data-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] flex flex-col card-enter">
+            <div class="flex items-center justify-between mb-4 p-4 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-900">Datos Importados (Padrón)</h2>
+                <button id="close-view-data" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <div class="p-4 border-b border-gray-200 flex flex-wrap gap-3 items-center">
+                <div class="relative flex-1 min-w-[200px]">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" id="view-data-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20 text-sm" placeholder="Buscar por cédula o nombre...">
+                </div>
+                <select id="view-data-filter-status" class="px-3 py-2 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20 text-sm">
+                    <option value="">Todos los estados</option>
+                    <option value="registered">Registrados</option>
+                    <option value="pending">Pendientes</option>
+                </select>
+                <button id="view-data-export" class="ml-auto px-3 py-2 text-sm bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Exportar CSV
+                </button>
+            </div>
+            <div class="flex-1 overflow-auto p-4">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm" id="view-data-table">
+                        <thead class="sticky top-0 bg-gray-50">
+                            <tr class="text-left text-gray-500 border-b border-gray-200">
+                                <th class="pb-2 px-2 font-medium">Cédula</th>
+                                <th class="pb-2 px-2 font-medium">Nombre</th>
+                                <th class="pb-2 px-2 font-medium">Estado</th>
+                                <th class="pb-2 px-2 font-medium">Fecha Registro</th>
+                                <th class="pb-2 px-2 font-medium">Registrado Por</th>
+                            </tr>
+                        </thead>
+                        <tbody id="view-data-rows" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+                <div id="view-data-empty" class="hidden text-center py-12 text-gray-500">
+                    <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <p>No hay datos para mostrar</p>
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex items-center justify-between">
+                <span id="view-data-count" class="text-sm text-gray-500">0 registros</span>
+                <button id="view-data-close-bottom" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-medium">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+<!-- Main App -->
     <div id="app" class="hidden">
         <!-- Header -->
 <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
@@ -118,7 +203,7 @@
                         <span id="status-text">Desconectado</span>
                     </span>
                     <button id="toggle-mode" class="px-3 py-1.5 text-sm bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg flex items-center gap-1 transition-colors" title="Cambiar entre Modo Demo y Supabase">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
                         <span id="mode-text">Modo Demo</span>
                     </button>
                     <div id="user-badge" class="hidden items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-sm font-medium border border-green-200">
@@ -126,8 +211,29 @@
                         <span id="current-user-name"></span>
                         <button id="switch-user" class="ml-1 text-green-600 hover:text-green-800 text-xs font-normal">cambiar</button>
                     </div>
+                    <!-- Menu Dropdown -->
+                    <div class="relative" id="menu-dropdown">
+                        <button id="menu-btn" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 font-medium flex items-center gap-1" title="Menú">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        </button>
+                        <div id="menu-content" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50">
+                            <button id="menu-log" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                Ver Log de Actividad
+                            </button>
+                            <button id="menu-view-data" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                Ver Datos Importados
+                            </button>
+                            <hr class="my-1 border-gray-200">
+                            <button id="menu-refresh-stats" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                Actualizar Estadísticas
+                            </button>
+                        </div>
+                    </div>
                     <button id="open-config" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 font-medium flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826 3.31-2.37 2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         Config
                     </button>
                     <button id="open-import" class="px-3 py-1.5 text-sm bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg flex items-center gap-1 transition-colors">
@@ -897,6 +1003,186 @@ function updateStats() {
         }
 
         // ============================================
+        // MENU DROPDOWN
+        // ============================================
+        function toggleMenuDropdown() {
+            const content = $('#menu-content');
+            content.classList.toggle('hidden');
+        }
+
+        function closeMenuDropdown() {
+            $('#menu-content').classList.add('hidden');
+        }
+
+        // ============================================
+        // LOG MODAL
+        // ============================================
+        function openLogModal() {
+            closeMenuDropdown();
+            populateLogUserFilter();
+            renderLogModal();
+            $('#log-modal').classList.remove('hidden');
+            $('#log-modal').classList.add('flex');
+        }
+
+        function closeLogModal() {
+            $('#log-modal').classList.add('hidden');
+            $('#log-modal').classList.remove('flex');
+        }
+
+        function populateLogUserFilter() {
+            const select = $('#log-filter-user');
+            const usersInLog = [...new Set(activityLog.map(e => e.user).filter(Boolean))];
+            select.innerHTML = '<option value="">Todos los usuarios</option>' +
+                usersInLog.map(u => `<option value="${escapeHtml(u)}">${escapeHtml(u)}</option>`).join('');
+        }
+
+        function renderLogModal() {
+            const userFilter = $('#log-filter-user').value;
+            const actionFilter = $('#log-filter-action').value;
+
+            let filtered = activityLog;
+            if (userFilter) filtered = filtered.filter(e => e.user === userFilter);
+            if (actionFilter) filtered = filtered.filter(e => e.action === actionFilter);
+
+            const list = $('#log-list');
+            $('#log-count').textContent = `${filtered.length} registro${filtered.length !== 1 ? 's' : ''}`;
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="text-center text-gray-400 py-8">No hay actividad que mostrar</div>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(entry => `
+                <div class="px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-gray-900 truncate">${escapeHtml(entry.nombre)}</p>
+                            <p class="text-xs text-gray-500">${escapeHtml(entry.cedula)}</p>
+                        </div>
+                        <div class="flex items-center gap-2 text-right">
+                            <span class="px-2 py-0.5 text-xs font-medium rounded-full ${entry.action === 'REGISTRO' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
+                                ${entry.action === 'REGISTRO' ? 'Registrado' : 'Consulta'}
+                            </span>
+                            ${entry.user ? `<span class="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-700">${escapeHtml(entry.user)}</span>` : ''}
+                            <span class="text-xs text-gray-400 whitespace-nowrap">${formatDate(entry.timestamp).split(', ')[1]}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function exportLogCSV() {
+            if (activityLog.length === 0) {
+                showToast('No hay datos para exportar', 'warning');
+                return;
+            }
+            const headers = ['Timestamp', 'Cédula', 'Nombre', 'Acción', 'Usuario'];
+            const rows = activityLog.map(e => [
+                formatDate(e.timestamp),
+                e.cedula,
+                e.nombre,
+                e.action,
+                e.user || ''
+            ]);
+            const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+            downloadCSV(csv, `log-actividad-${new Date().toISOString().split('T')[0]}.csv`);
+            showToast('Log exportado a CSV', 'success');
+        }
+
+        // ============================================
+        // VIEW DATA MODAL
+        // ============================================
+        function openViewDataModal() {
+            closeMenuDropdown();
+            renderViewDataModal();
+            $('#view-data-modal').classList.remove('hidden');
+            $('#view-data-modal').classList.add('flex');
+        }
+
+        function closeViewDataModal() {
+            $('#view-data-modal').classList.add('hidden');
+            $('#view-data-modal').classList.remove('flex');
+        }
+
+        function renderViewDataModal() {
+            const search = $('#view-data-search').value.toLowerCase().trim();
+            const statusFilter = $('#view-data-filter-status').value;
+
+            let data = Array.from(demoData.values());
+            if (!demoMode && sbClient) {
+                // En modo Supabase, solo mostramos lo que tenemos en localStorage
+                // Para ver todos, necesitaríamos hacer fetch a Supabase
+            }
+
+            let filtered = data;
+            if (search) {
+                filtered = filtered.filter(v =>
+                    v.cedula.includes(search) ||
+                    v.nombre.toLowerCase().includes(search)
+                );
+            }
+            if (statusFilter === 'registered') {
+                filtered = filtered.filter(v => v.ya_registrado);
+            } else if (statusFilter === 'pending') {
+                filtered = filtered.filter(v => !v.ya_registrado);
+            }
+
+            const tbody = $('#view-data-rows');
+            const empty = $('#view-data-empty');
+            $('#view-data-count').textContent = `${filtered.length} registro${filtered.length !== 1 ? 's' : ''}`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+
+            tbody.innerHTML = filtered.map(v => `
+                <tr class="hover:bg-gray-50">
+                    <td class="py-2 px-2 font-mono text-gray-700">${escapeHtml(v.cedula)}</td>
+                    <td class="py-2 px-2 text-gray-900">${escapeHtml(v.nombre)}</td>
+                    <td class="py-2 px-2">
+                        <span class="px-2 py-0.5 text-xs font-medium rounded-full ${v.ya_registrado ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
+                            ${v.ya_registrado ? 'Registrado' : 'Pendiente'}
+                        </span>
+                    </td>
+                    <td class="py-2 px-2 text-gray-500 text-xs">${v.fecha_registro ? formatDate(v.fecha_registro) : '-'}</td>
+                    <td class="py-2 px-2 text-gray-500 text-xs">${escapeHtml(v.registrado_por || '-')}</td>
+                </tr>
+            `).join('');
+        }
+
+        function exportViewDataCSV() {
+            const data = Array.from(demoData.values());
+            if (data.length === 0) {
+                showToast('No hay datos para exportar', 'warning');
+                return;
+            }
+            const headers = ['Cédula', 'Nombre', 'Registrado', 'Fecha Registro', 'Registrado Por'];
+            const rows = data.map(v => [
+                v.cedula,
+                v.nombre,
+                v.ya_registrado ? 'Sí' : 'No',
+                v.fecha_registro ? formatDate(v.fecha_registro) : '',
+                v.registrado_por || ''
+            ]);
+            const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+            downloadCSV(csv, `padron-${new Date().toISOString().split('T')[0]}.csv`);
+            showToast('Padrón exportado a CSV', 'success');
+        }
+
+        function downloadCSV(csv, filename) {
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        // ============================================
         // REGISTRO
         // ============================================
         async function registerVote(cedula, nombre, isUnknown = false) {
@@ -1319,6 +1605,42 @@ if (demoMode) {
             $('#confirm-unknown').onclick = confirmRegisterUnknown;
             $('#unknown-nombre').onkeydown = (e) => {
                 if (e.key === 'Enter') confirmRegisterUnknown();
+            };
+
+            // Log modal
+            $('#menu-log').onclick = openLogModal;
+            $('#close-log').onclick = closeLogModal;
+            $('#log-close-bottom').onclick = closeLogModal;
+            $('#log-filter-user').onchange = renderLogModal;
+            $('#log-filter-action').onchange = renderLogModal;
+            $('#log-clear-filters').onclick = () => {
+                $('#log-filter-user').value = '';
+                $('#log-filter-action').value = '';
+                renderLogModal();
+            };
+            $('#log-export').onclick = exportLogCSV;
+
+            // View Data modal
+            $('#menu-view-data').onclick = openViewDataModal;
+            $('#close-view-data').onclick = closeViewDataModal;
+            $('#view-data-close-bottom').onclick = closeViewDataModal;
+            $('#view-data-search').oninput = renderViewDataModal;
+            $('#view-data-filter-status').onchange = renderViewDataModal;
+            $('#view-data-export').onclick = exportViewDataCSV;
+
+            // Menu dropdown
+            $('#menu-btn').onclick = toggleMenuDropdown;
+            document.addEventListener('click', (e) => {
+                if (!$('#menu-dropdown').contains(e.target)) {
+                    closeMenuDropdown();
+                }
+            });
+
+            // Refresh stats
+            $('#menu-refresh-stats').onclick = () => {
+                closeMenuDropdown();
+                updateStats();
+                showToast('Estadísticas actualizadas', 'info');
             };
 
             // Login modal
