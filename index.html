@@ -74,6 +74,7 @@
             <div class="flex gap-3 mt-6">
                 <button id="save-config" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors">Guardar y Conectar</button>
                 <button id="skip-config" class="px-4 py-3 text-gray-600 hover:text-gray-800 font-medium">Omitir</button>
+                <button id="clear-config" class="px-4 py-3 text-red-600 hover:text-red-800 font-medium border border-red-300 rounded-lg transition-colors" title="Borrar configuración guardada">Limpiar</button>
             </div>
         </div>
     </div>
@@ -86,10 +87,25 @@
                 <button id="close-unknown" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
             <p class="text-gray-600 mb-4">La cédula <span id="unknown-cedula" class="font-mono font-medium text-gray-900"></span> no está en el padrón.</p>
-            <p class="text-sm text-gray-500 mb-6">Ingresa el nombre para registrarla:</p>
+            <p class="text-sm text-gray-500 mb-2">Ingresa los datos para registrarla:</p>
+            <p class="text-xs text-amber-600 mb-4">💡 Consultá <a href="https://padron.tsje.gov.py/" target="_blank" class="underline">padron.tsje.gov.py</a> para ver Orden y Mesa</p>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
                 <input type="text" id="unknown-nombre" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20" placeholder="Nombre y apellido" maxlength="100" autocomplete="off">
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Orden (opcional)</label>
+                    <input type="number" id="unknown-orden" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20" placeholder="N° orden" min="1" autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mesa (opcional)</label>
+                    <input type="number" id="unknown-mesa" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20" placeholder="N° mesa" min="1" autocomplete="off">
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Referente (opcional)</label>
+                <input type="text" id="unknown-referente" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20" placeholder="Nombre del referente" maxlength="50" autocomplete="off">
             </div>
             <div class="flex gap-3">
                 <button id="confirm-unknown" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors">Registrar</button>
@@ -163,6 +179,9 @@
                             <tr class="text-left text-gray-500 border-b border-gray-200">
                                 <th class="pb-2 px-2 font-medium">Cédula</th>
                                 <th class="pb-2 px-2 font-medium">Nombre</th>
+                                <th class="pb-2 px-2 font-medium">Orden</th>
+                                <th class="pb-2 px-2 font-medium">Mesa</th>
+                                <th class="pb-2 px-2 font-medium">Referente</th>
                                 <th class="pb-2 px-2 font-medium">Estado</th>
                                 <th class="pb-2 px-2 font-medium">Fecha Registro</th>
                                 <th class="pb-2 px-2 font-medium">Registrado Por</th>
@@ -320,7 +339,7 @@
                 <h2 class="text-2xl font-bold text-gray-900">Cargar Padrón desde Excel</h2>
                 <button id="close-import" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
-            <p class="text-gray-600 mb-6">Selecciona un archivo <code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">.xlsx</code> con las columnas <strong>cedula</strong> y <strong>nombre</strong>. Se usará <code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">upsert</code> para evitar duplicados.</p>
+            <p class="text-gray-600 mb-6">Selecciona un archivo <code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">.xlsx</code> con las columnas <strong>cedula</strong> y <strong>nombre</strong> (opcional: <strong>orden</strong>, <strong>mesa</strong>, <strong>referente</strong>). Se usará <code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">upsert</code> para evitar duplicados.</p>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Archivo Excel</label>
                 <div class="relative">
@@ -335,17 +354,20 @@
             </div>
             <div id="import-preview" class="hidden mb-4">
                 <p class="text-sm font-medium text-gray-700 mb-2">Vista previa (primeras 5 filas):</p>
-                <div class="overflow-x-auto bg-gray-50 rounded-lg p-3">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="text-left text-gray-500">
-                                <th class="pb-2 font-medium">Cédula</th>
-                                <th class="pb-2 font-medium">Nombre</th>
-                            </tr>
-                        </thead>
-                        <tbody id="preview-rows"></tbody>
-                    </table>
-                </div>
+<div class="overflow-x-auto bg-gray-50 rounded-lg p-3">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-gray-500">
+                                    <th class="pb-2 font-medium">Cédula</th>
+                                    <th class="pb-2 font-medium">Nombre</th>
+                                    <th class="pb-2 font-medium">Orden</th>
+                                    <th class="pb-2 font-medium">Mesa</th>
+                                    <th class="pb-2 font-medium">Referente</th>
+                                </tr>
+                            </thead>
+                            <tbody id="preview-rows"></tbody>
+                        </table>
+                    </div>
                 <p class="text-xs text-gray-500 mt-2" id="preview-count"></p>
             </div>
             <div id="import-progress" class="hidden mb-4">
@@ -380,7 +402,7 @@
         let activityLog = [];
         let isImporting = false;
         let demoMode = false;
-        let demoData = new Map(); // cedula -> {cedula, nombre, ya_registrado, fecha_registro, registrado_por}
+        let demoData = new Map(); // cedula -> {cedula, nombre, orden, mesa, referente, ya_registrado, fecha_registro, registrado_por}
         let users = []; // [{id, name, created_at}]
         let currentUser = null; // {id, name}
 
@@ -403,7 +425,7 @@
             toast.classList.add(colors[type] || colors.info);
             toast.innerHTML = `
                 <span class="flex-1 truncate text-sm">${message}</span>
-                <button class="text-white/80 hover:text-white text-lg leading-none px-2" onclick="this.parentElement.remove()">×</button>
+                <button class="text-white/80 hover:text-white text-lg leading-none px-2" onclick="this.parentElement.remove()">&times;</button>
             `;
             container.appendChild(toast);
             setTimeout(() => {
@@ -688,14 +710,14 @@ function updateStats() {
             // Si no hay datos, cargar datos de prueba
             if (demoData.size === 0) {
                 const sample = [
-                    { cedula: '12345678', nombre: 'Juan Pérez García', ya_registrado: false, fecha_registro: null, registrado_por: null },
-                    { cedula: '87654321', nombre: 'María González López', ya_registrado: false, fecha_registro: null, registrado_por: null },
-                    { cedula: '11223344', nombre: 'Carlos Rodríguez Ruiz', ya_registrado: true, fecha_registro: new Date(Date.now() - 3600000).toISOString(), registrado_por: 'Operador Demo' },
-                    { cedula: '44332211', nombre: 'Ana Martínez Fernández', ya_registrado: false, fecha_registro: null, registrado_por: null },
-                    { cedula: '55667788', nombre: 'Luis Sánchez Romero', ya_registrado: true, fecha_registro: new Date(Date.now() - 7200000).toISOString(), registrado_por: 'Operador Demo' },
-                    { cedula: '99887766', nombre: 'Laura Torres Molina', ya_registrado: false, fecha_registro: null, registrado_por: null },
-                    { cedula: '11112222', nombre: 'Pedro Jiménez Herrera', ya_registrado: false, fecha_registro: null, registrado_por: null },
-                    { cedula: '33334444', nombre: 'Sofía Vargas Castro', ya_registrado: false, fecha_registro: null, registrado_por: null },
+                    { cedula: '12345678', nombre: 'Juan Pérez García', orden: 1, mesa: 101, referente: 'Carlos R.', ya_registrado: false, fecha_registro: null, registrado_por: null },
+                    { cedula: '87654321', nombre: 'María González López', orden: 2, mesa: 101, referente: 'Ana M.', ya_registrado: false, fecha_registro: null, registrado_por: null },
+                    { cedula: '11223344', nombre: 'Carlos Rodríguez Ruiz', orden: 3, mesa: 102, referente: 'Pedro J.', ya_registrado: true, fecha_registro: new Date(Date.now() - 3600000).toISOString(), registrado_por: 'Operador Demo' },
+                    { cedula: '44332211', nombre: 'Ana Martínez Fernández', orden: 4, mesa: 102, referente: 'Luis S.', ya_registrado: false, fecha_registro: null, registrado_por: null },
+                    { cedula: '55667788', nombre: 'Luis Sánchez Romero', orden: 5, mesa: 103, referente: 'María G.', ya_registrado: true, fecha_registro: new Date(Date.now() - 7200000).toISOString(), registrado_por: 'Operador Demo' },
+                    { cedula: '99887766', nombre: 'Laura Torres Molina', orden: 6, mesa: 103, referente: 'Sofía V.', ya_registrado: false, fecha_registro: null, registrado_por: null },
+                    { cedula: '11112222', nombre: 'Pedro Jiménez Herrera', orden: 7, mesa: 104, referente: 'Juan P.', ya_registrado: false, fecha_registro: null, registrado_por: null },
+                    { cedula: '33334444', nombre: 'Sofía Vargas Castro', orden: 8, mesa: 104, referente: 'Carlos R.', ya_registrado: false, fecha_registro: null, registrado_por: null },
                 ];
                 sample.forEach(v => demoData.set(v.cedula, v));
                 saveDemoData();
@@ -757,9 +779,15 @@ function updateStats() {
         // SUPABASE
         // ============================================
         function initSupabase(url, key) {
-            if (sbClient) {
-                if (channel) sbClient.removeChannel(channel);
+            // Clean up existing client and channel
+            if (channel) {
+                try { sbClient.removeChannel(channel); } catch {}
+                channel = null;
             }
+            if (sbClient) {
+                try { sbClient.auth.signOut(); } catch {}
+            }
+            
             sbClient = window.supabase.createClient(url, key, {
                 realtime: { params: { eventsPerSecond: 10 } }
             });
@@ -789,26 +817,6 @@ function updateStats() {
                 }, (payload) => {
                     console.log('Realtime event:', payload);
                     updateStats();
-                    const currentCedula = $('#cedula-input').value.trim();
-                    if (currentCedula && payload.new && payload.new.cedula === currentCedula) {
-                        handleSearchResult(payload.new);
-                    }
-                })
-                .subscribe((status) => {
-                    console.log('Realtime status:', status);
-                });
-        }
-
-        function setupRealtime() {
-            channel = sbClient.channel('padron-changes')
-                .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'padron'
-                }, (payload) => {
-                    console.log('Realtime event:', payload);
-                    updateStats();
-                    // Si estamos viendo una cédula que cambió, actualizar la vista
                     const currentCedula = $('#cedula-input').value.trim();
                     if (currentCedula && payload.new && payload.new.cedula === currentCedula) {
                         handleSearchResult(payload.new);
@@ -894,6 +902,23 @@ function updateStats() {
         }
 
         function showResultCanRegister(voter) {
+            const ordenMesaBoxes = (voter.orden || voter.mesa) ? `
+                <div class="flex gap-4 justify-center mb-4 flex-wrap">
+                    ${voter.orden ? `
+                        <div class="bg-white border-2 border-green-300 rounded-xl px-6 py-3 min-w-[120px] shadow-sm">
+                            <p class="text-xs text-gray-500 uppercase tracking-wider mb-0.5">ORDEN</p>
+                            <p class="text-2xl md:text-3xl font-bold text-green-700 font-mono">${escapeHtml(voter.orden.toString())}</p>
+                        </div>
+                    ` : ''}
+                    ${voter.mesa ? `
+                        <div class="bg-white border-2 border-blue-300 rounded-xl px-6 py-3 min-w-[120px] shadow-sm">
+                            <p class="text-xs text-gray-500 uppercase tracking-wider mb-0.5">MESA</p>
+                            <p class="text-2xl md:text-3xl font-bold text-blue-700 font-mono">${escapeHtml(voter.mesa.toString())}</p>
+                        </div>
+                    ` : ''}
+                </div>
+            ` : '';
+            const referenteInfo = voter.referente ? `<p class="text-xs text-gray-400 mt-2">Referente: <span class="font-medium text-gray-600">${escapeHtml(voter.referente)}</span></p>` : '';
             $('#result-card').innerHTML = `
                 <div class="bg-green-50 border-2 border-green-200 rounded-2xl p-6 md:p-8 text-center pulse-green">
                     <div class="w-20 h-20 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
@@ -901,7 +926,9 @@ function updateStats() {
                     </div>
                     <p class="text-sm text-gray-500 uppercase tracking-wider mb-1">PERSONA HABILITADA</p>
                     <h3 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">${escapeHtml(voter.nombre)}</h3>
-                    <p class="text-gray-500 mb-6">Cédula: <span class="font-mono font-medium text-gray-700">${escapeHtml(voter.cedula)}</span></p>
+                    <p class="text-gray-500 mb-3">Cédula: <span class="font-mono font-medium text-gray-700">${escapeHtml(voter.cedula)}</span></p>
+                    ${ordenMesaBoxes}
+                    ${referenteInfo}
                     <button id="vote-btn" class="w-full md:w-64 mx-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-8 rounded-xl text-lg transition-colors flex items-center justify-center gap-2">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         REGISTRAR
@@ -912,8 +939,25 @@ function updateStats() {
             $('#activity-section').classList.remove('hidden');
         }
 
-        function showResultRegistered(voter) {
+function showResultRegistered(voter) {
             const registradoPor = voter.registrado_por ? ` por <strong>${escapeHtml(voter.registrado_por)}</strong>` : '';
+            const ordenMesaBoxes = (voter.orden || voter.mesa) ? `
+                <div class="flex gap-4 justify-center mb-4 flex-wrap">
+                    ${voter.orden ? `
+                        <div class="bg-white border-2 border-green-300 rounded-xl px-6 py-3 min-w-[120px] shadow-sm">
+                            <p class="text-xs text-gray-500 uppercase tracking-wider mb-0.5">ORDEN</p>
+                            <p class="text-2xl md:text-3xl font-bold text-green-700 font-mono">${escapeHtml(voter.orden.toString())}</p>
+                        </div>
+                    ` : ''}
+                    ${voter.mesa ? `
+                        <div class="bg-white border-2 border-blue-300 rounded-xl px-6 py-3 min-w-[120px] shadow-sm">
+                            <p class="text-xs text-gray-500 uppercase tracking-wider mb-0.5">MESA</p>
+                            <p class="text-2xl md:text-3xl font-bold text-blue-700 font-mono">${escapeHtml(voter.mesa.toString())}</p>
+                        </div>
+                    ` : ''}
+                </div>
+            ` : '';
+            const referenteInfo = voter.referente ? `<p class="text-xs text-gray-400 mt-2">Referente: <span class="font-medium text-gray-600">${escapeHtml(voter.referente)}</span></p>` : '';
             $('#result-card').innerHTML = `
                 <div class="bg-red-50 border-2 border-red-200 rounded-2xl p-6 md:p-8 text-center shake">
                     <div class="w-20 h-20 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
@@ -921,8 +965,10 @@ function updateStats() {
                     </div>
                     <p class="text-sm text-gray-500 uppercase tracking-wider mb-1">¡ATENCIÓN!</p>
                     <h3 class="text-2xl md:text-3xl font-bold text-red-700 mb-2">ESTA PERSONA YA ESTÁ REGISTRADA</h3>
-                    <p class="text-gray-900 text-xl font-medium mb-4">${escapeHtml(voter.nombre)}</p>
-                    <p class="text-gray-500 mb-2">Cédula: <span class="font-mono font-medium text-gray-700">${escapeHtml(voter.cedula)}</span></p>
+                    <p class="text-gray-900 text-xl font-medium mb-4">${escapeHtml(voter.nombre)}</h3>
+                    <p class="text-gray-500 mb-3">Cédula: <span class="font-mono font-medium text-gray-700">${escapeHtml(voter.cedula)}</span></p>
+                    ${ordenMesaBoxes}
+                    ${referenteInfo}
                     <div class="bg-red-100 rounded-xl p-4 inline-block">
                         <p class="text-sm text-gray-600">Fecha y hora de registro${registradoPor}:</p>
                         <p class="text-lg font-mono font-bold text-red-800 mt-1">${formatDate(voter.fecha_registro)}</p>
@@ -979,6 +1025,8 @@ function updateStats() {
             pendingUnknownCedula = cedula;
             $('#unknown-cedula').textContent = cedula;
             $('#unknown-nombre').value = '';
+            $('#unknown-orden').value = '';
+            $('#unknown-mesa').value = '';
             $('#register-unknown-modal').classList.remove('hidden');
             $('#register-unknown-modal').classList.add('flex');
             setTimeout(() => $('#unknown-nombre').focus(), 100);
@@ -997,9 +1045,12 @@ function updateStats() {
                 $('#unknown-nombre').focus();
                 return;
             }
+            const orden = parseInt($('#unknown-orden').value.trim()) || null;
+            const mesa = parseInt($('#unknown-mesa').value.trim()) || null;
+            const referente = $('#unknown-referente').value.trim() || null;
             const cedula = pendingUnknownCedula;
             closeRegisterUnknownModal();
-            registerVote(cedula, nombre, true); // true = isUnknown
+            registerVote(cedula, nombre, true, orden, mesa, referente); // true = isUnknown
         }
 
         // ============================================
@@ -1143,6 +1194,9 @@ function updateStats() {
                 <tr class="hover:bg-gray-50">
                     <td class="py-2 px-2 font-mono text-gray-700">${escapeHtml(v.cedula)}</td>
                     <td class="py-2 px-2 text-gray-900">${escapeHtml(v.nombre)}</td>
+                    <td class="py-2 px-2 text-gray-700">${v.orden != null ? escapeHtml(v.orden.toString()) : '-'}</td>
+                    <td class="py-2 px-2 text-gray-700">${v.mesa != null ? escapeHtml(v.mesa.toString()) : '-'}</td>
+                    <td class="py-2 px-2 text-gray-700">${escapeHtml(v.referente || '-')}</td>
                     <td class="py-2 px-2">
                         <span class="px-2 py-0.5 text-xs font-medium rounded-full ${v.ya_registrado ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
                             ${v.ya_registrado ? 'Registrado' : 'Pendiente'}
@@ -1160,10 +1214,13 @@ function updateStats() {
                 showToast('No hay datos para exportar', 'warning');
                 return;
             }
-            const headers = ['Cédula', 'Nombre', 'Registrado', 'Fecha Registro', 'Registrado Por'];
+            const headers = ['Cédula', 'Nombre', 'Orden', 'Mesa', 'Referente', 'Registrado', 'Fecha Registro', 'Registrado Por'];
             const rows = data.map(v => [
                 v.cedula,
                 v.nombre,
+                v.orden != null ? v.orden.toString() : '',
+                v.mesa != null ? v.mesa.toString() : '',
+                v.referente || '',
                 v.ya_registrado ? 'Sí' : 'No',
                 v.fecha_registro ? formatDate(v.fecha_registro) : '',
                 v.registrado_por || ''
@@ -1185,7 +1242,7 @@ function updateStats() {
         // ============================================
         // REGISTRO
         // ============================================
-        async function registerVote(cedula, nombre, isUnknown = false) {
+        async function registerVote(cedula, nombre, isUnknown = false, orden = null, mesa = null, referente = null) {
             const btn = $('#vote-btn');
             if (btn) {
                 btn.disabled = true;
@@ -1206,6 +1263,9 @@ function updateStats() {
                         demoData.set(cedula, {
                             cedula,
                             nombre,
+                            orden,
+                            mesa,
+                            referente,
                             ya_registrado: true,
                             fecha_registro: now,
                             registrado_por: registradoPor
@@ -1240,6 +1300,9 @@ function updateStats() {
                     };
                     if (isUnknown) {
                         updateData.nombre = nombre;
+                        updateData.orden = orden;
+                        updateData.mesa = mesa;
+                        updateData.referente = referente;
                     }
                     const { error } = await sbClient
                         .from('padron')
@@ -1250,6 +1313,24 @@ function updateStats() {
                 showToast(`Registro confirmado para ${nombre}`, 'success');
                 addActivity(cedula, nombre, 'REGISTRO');
 
+                const voter = demoMode ? demoData.get(cedula) : null;
+                const ordenMesaBoxes = ((voter?.orden || voter?.mesa) || (orden || mesa)) ? `
+                    <div class="flex gap-4 justify-center mb-4 flex-wrap">
+                        ${(voter?.orden || orden) ? `
+                            <div class="bg-white border-2 border-green-300 rounded-xl px-6 py-3 min-w-[120px] shadow-sm">
+                                <p class="text-xs text-gray-500 uppercase tracking-wider mb-0.5">ORDEN</p>
+                                <p class="text-2xl md:text-3xl font-bold text-green-700 font-mono">${escapeHtml((voter?.orden || orden).toString())}</p>
+                            </div>
+                        ` : ''}
+                        ${(voter?.mesa || mesa) ? `
+                            <div class="bg-white border-2 border-blue-300 rounded-xl px-6 py-3 min-w-[120px] shadow-sm">
+                                <p class="text-xs text-gray-500 uppercase tracking-wider mb-0.5">MESA</p>
+                                <p class="text-2xl md:text-3xl font-bold text-blue-700 font-mono">${escapeHtml((voter?.mesa || mesa).toString())}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                ` : '';
+                const referenteInfo = (voter?.referente || referente) ? `<p class="text-xs text-gray-400 mt-2">Referente: <span class="font-medium text-gray-600">${escapeHtml(voter?.referente || referente)}</span></p>` : '';
                 $('#result-card').innerHTML = `
                     <div class="bg-green-50 border-2 border-green-200 rounded-2xl p-6 md:p-8 text-center pulse-green">
                         <div class="w-20 h-20 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
@@ -1257,7 +1338,9 @@ function updateStats() {
                         </div>
                         <p class="text-sm text-gray-500 uppercase tracking-wider mb-1">REGISTRO CONFIRMADO</p>
                         <h3 class="text-3xl font-bold text-gray-900 mb-2">${escapeHtml(nombre)}</h3>
-                        <p class="text-gray-500 mb-2">Cédula: <span class="font-mono font-medium text-gray-700">${escapeHtml(cedula)}</span></p>
+                        <p class="text-gray-500 mb-3">Cédula: <span class="font-mono font-medium text-gray-700">${escapeHtml(cedula)}</span></p>
+                        ${ordenMesaBoxes}
+                        ${referenteInfo}
                         <p class="text-sm text-gray-500">Registrado por: <strong>${escapeHtml(registradoPor)}</strong></p>
                         <p class="text-sm text-green-700 font-medium mt-2">${formatDate(now)}</p>
                     </div>
@@ -1356,9 +1439,15 @@ function updateStats() {
                         const keys = Object.keys(row);
                         const cedulaKey = keys.find(k => k.toLowerCase() === 'cedula');
                         const nombreKey = keys.find(k => k.toLowerCase() === 'nombre');
+                        const ordenKey = keys.find(k => k.toLowerCase() === 'orden');
+                        const mesaKey = keys.find(k => k.toLowerCase() === 'mesa');
+                        const referenteKey = keys.find(k => k.toLowerCase() === 'referente');
                         return {
                             cedula: cedulaKey ? String(row[cedulaKey]).trim() : '',
-                            nombre: nombreKey ? String(row[nombreKey]).trim() : ''
+                            nombre: nombreKey ? String(row[nombreKey]).trim() : '',
+                            orden: ordenKey ? parseInt(String(row[ordenKey]).trim()) || null : null,
+                            mesa: mesaKey ? parseInt(String(row[mesaKey]).trim()) || null : null,
+                            referente: referenteKey ? String(row[referenteKey]).trim() : null
                         };
                     }).filter(row => row.cedula && row.nombre);
 
@@ -1373,6 +1462,9 @@ function updateStats() {
                         <tr class="border-b border-gray-200 last:border-0">
                             <td class="py-2 px-2 font-mono text-gray-700">${escapeHtml(row.cedula)}</td>
                             <td class="py-2 px-2 text-gray-900">${escapeHtml(row.nombre)}</td>
+                            <td class="py-2 px-2 text-gray-700">${row.orden != null ? escapeHtml(row.orden.toString()) : '-'}</td>
+                            <td class="py-2 px-2 text-gray-700">${row.mesa != null ? escapeHtml(row.mesa.toString()) : '-'}</td>
+                            <td class="py-2 px-2 text-gray-700">${escapeHtml(row.referente || '-')}</td>
                         </tr>
                     `).join('');
                     $('#preview-count').textContent = `Total de registros válidos: ${normalized.length.toLocaleString('es-ES')}${normalized.length > 5 ? ` (mostrando 5 de ${normalized.length})` : ''}`;
@@ -1391,6 +1483,15 @@ function updateStats() {
             const data = JSON.parse($('#import-btn').dataset.json || '[]');
             if (!data.length) return;
 
+            // Deduplicate by cédula (keep last occurrence)
+            const seen = new Map();
+            data.forEach(row => seen.set(row.cedula, row));
+            const dedupedData = Array.from(seen.values());
+            
+            if (dedupedData.length !== data.length) {
+                showToast(`Se eliminaron ${data.length - dedupedData.length} cédulas duplicadas del Excel`, 'info');
+            }
+
             isImporting = true;
             $('#import-btn').disabled = true;
             $('#import-btn').textContent = 'Importando...';
@@ -1402,10 +1503,10 @@ function updateStats() {
             let success = 0;
             let errors = 0;
 
-if (demoMode) {
-                for (let i = 0; i < data.length; i += batchSize) {
-                    const batch = data.slice(i, i + batchSize);
-                    const progress = Math.round(((i + batch.length) / data.length) * 100);
+            if (demoMode) {
+                for (let i = 0; i < dedupedData.length; i += batchSize) {
+                    const batch = dedupedData.slice(i, i + batchSize);
+                    const progress = Math.round(((i + batch.length) / dedupedData.length) * 100);
                     $('#progress-bar').style.width = `${progress}%`;
                     $('#progress-text').textContent = `${progress}%`;
 
@@ -1414,6 +1515,9 @@ if (demoMode) {
                         demoData.set(row.cedula, {
                             cedula: row.cedula,
                             nombre: row.nombre,
+                            orden: row.orden != null ? row.orden : existing?.orden || null,
+                            mesa: row.mesa != null ? row.mesa : existing?.mesa || null,
+                            referente: row.referente || existing?.referente || null,
                             ya_registrado: existing?.ya_registrado || false,
                             fecha_registro: existing?.fecha_registro || null,
                             registrado_por: existing?.registrado_por || null
@@ -1434,9 +1538,9 @@ if (demoMode) {
                     $('#import-progress').classList.add('hidden');
                     return;
                 }
-                for (let i = 0; i < data.length; i += batchSize) {
-                    const batch = data.slice(i, i + batchSize);
-                    const progress = Math.round(((i + batch.length) / data.length) * 100);
+                for (let i = 0; i < dedupedData.length; i += batchSize) {
+                    const batch = dedupedData.slice(i, i + batchSize);
+                    const progress = Math.round(((i + batch.length) / dedupedData.length) * 100);
                     $('#progress-bar').style.width = `${progress}%`;
                     $('#progress-text').textContent = `${progress}%`;
 
@@ -1446,10 +1550,13 @@ if (demoMode) {
                             .upsert(batch.map(r => ({
                                 cedula: r.cedula,
                                 nombre: r.nombre,
+                                orden: r.orden,
+                                mesa: r.mesa,
+                                referente: r.referente,
                                 ya_registrado: false,
                                 fecha_registro: null,
                                 registrado_por: null
-                            })), { onConflict: 'cedula', ignoreDuplicates: false });
+                            })), { onConflict: 'cedula', ignoreDuplicates: true });
                         if (error) throw error;
                         success += batch.length;
                     } catch (err) {
@@ -1496,7 +1603,13 @@ if (demoMode) {
                 try {
                     const { url, key } = JSON.parse(saved);
                     if (url && key) {
-                        initSupabase(url, key);
+                        // Clean URL in case old config had /rest/v1/
+                        let cleanUrl = url.replace(/\/+$/, '');
+                        if (cleanUrl.includes('/rest/v1')) {
+                            cleanUrl = cleanUrl.replace(/\/rest\/v1.*$/, '');
+                            saveConfig(cleanUrl, key);
+                        }
+                        initSupabase(cleanUrl, key);
                         return true;
                     }
                 } catch {}
@@ -1541,9 +1654,16 @@ if (demoMode) {
                 return;
             }
 
-            saveConfig(url, key);
+            // Normalize URL: remove trailing slash and /rest/v1/ if present
+            let cleanUrl = url.replace(/\/+$/, '');
+            if (cleanUrl.includes('/rest/v1')) {
+                cleanUrl = cleanUrl.replace(/\/rest\/v1.*$/, '');
+                showToast('URL corregida: se quitó /rest/v1/', 'info');
+            }
+
+            saveConfig(cleanUrl, key);
             closeConfigModal();
-            initSupabase(url, key);
+            initSupabase(cleanUrl, key);
         }
 
         // ============================================
@@ -1565,6 +1685,17 @@ if (demoMode) {
             $('#skip-config').onclick = () => {
                 closeConfigModal();
                 showToast('Configuración omitida. Podrá configurar después.', 'info');
+            };
+            $('#clear-config').onclick = () => {
+                localStorage.removeItem(CONFIG_KEY);
+                if (sbClient) {
+                    try { sbClient.auth.signOut(); } catch {}
+                    sbClient = null;
+                    channel = null;
+                }
+                updateConnectionStatus(false);
+                closeConfigModal();
+                showToast('Configuración borrada. Vuelva a ingresar credenciales.', 'info');
             };
             $('#save-config').onclick = handleSaveConfig;
             $('#supabase-url, #supabase-key').onkeydown = (e) => {

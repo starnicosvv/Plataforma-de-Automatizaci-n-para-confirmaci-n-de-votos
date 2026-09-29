@@ -89,6 +89,9 @@ http://localhost:8080
 create table padron (
   cedula text primary key,
   nombre text not null,
+  orden integer,
+  mesa integer,
+  referente text,
   ya_registrado boolean default false,
   fecha_registro timestamptz,
   registrado_por text
@@ -170,6 +173,9 @@ alter publication supabase_realtime add table padron;
 |-------|------|-------------|
 | `cedula` | TEXT PK | Número de documento único |
 | `nombre` | TEXT | Nombre completo |
+| `orden` | INTEGER | N° de orden en mesa (opcional) |
+| `mesa` | INTEGER | N° de mesa receptora (opcional) |
+| `referente` | TEXT | Nombre del referente (opcional) |
 | `ya_registrado` | BOOLEAN | Default: false |
 | `fecha_registro` | TIMESTAMPTZ | Nullable, ISO 8601 |
 | `registrado_por` | TEXT | Nombre del operador |
