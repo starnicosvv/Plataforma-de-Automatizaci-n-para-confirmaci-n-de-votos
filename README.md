@@ -109,6 +109,29 @@ create table padron (
 alter publication supabase_realtime add table padron;
 ```
 
+### 2b. Crear tabla `users` (para compartir usuarios entre dispositivos)
+
+```sql
+-- Ejecutar en SQL Editor de Supabase
+create table users (
+  id text primary key,
+  name text not null,
+  created_at timestamptz default now()
+);
+
+-- Habilitar Realtime (opcional)
+alter publication supabase_realtime add table users;
+
+-- Políticas RLS
+alter table users enable row level security;
+
+create policy "Todos pueden leer usuarios" on users
+  for select using (true);
+
+create policy "Todos pueden insertar usuarios" on users
+  for insert with check (true);
+```
+
 ### 3. Configurar en la app
 
 1. Abrir la app → botón **"Config"** (engranaje)

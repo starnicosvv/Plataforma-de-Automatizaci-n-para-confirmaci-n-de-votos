@@ -537,33 +537,76 @@
         // ============================================
         // GESTIÓN DE USUARIOS
         // ============================================
-        function loadUsers() {
-            const saved = localStorage.getItem(USERS_KEY);
-            if (saved) {
-                try {
-                    users = JSON.parse(saved);
-                } catch {
-                    users = [];
-                }
-            }
-            // Cargar usuario actual
-            const currentSaved = localStorage.getItem(CURRENT_USER_KEY);
-            if (currentSaved) {
-                try {
-                    currentUser = JSON.parse(currentSaved);
-                    // Verificar que el usuario sigue existiendo
-                    if (!users.find(u => u.id === currentUser.id)) {
-                        currentUser = null;
-                        localStorage.removeItem(CURRENT_USER_KEY);
+        async function loadUsers() {
+            if (demoMode) {
+                const saved = localStorage.getItem(USERS_KEY);
+                if (saved) {
+                    try {
+                        users = JSON.parse(saved);
+                    } catch {
+                        users = [];
                     }
-                } catch {
-                    currentUser = null;
+                }
+                // Cargar usuario actual
+                const currentSaved = localStorage.getItem(CURRENT_USER_KEY);
+                if (currentSaved) {
+                    try {
+                        currentUser = JSON.parse(currentSaved);
+                        if (!users.find(u => u.id === currentUser.id)) {
+                            currentUser = null;
+                            localStorage.removeItem(CURRENT_USER_KEY);
+                        }
+                    } catch {
+                        currentUser = null;
+                    }
+                }
+                return;
+            }
+            // Modo Supabase: cargar usuarios desde la base de datos
+            if (!sbClient) return;
+            try {
+                const { data, error } = await sbClient.from('users').select('*').order('created_at');
+                if (error) throw error;
+                users = data || [];
+                // Cargar usuario actual desde localStorage (sesión local)
+                const currentSaved = localStorage.getItem(CURRENT_USER_KEY);
+                if (currentSaved) {
+                    try {
+                        currentUser = JSON.parse(currentSaved);
+                        if (!users.find(u => u.id === currentUser.id)) {
+                            currentUser = null;
+                            localStorage.removeItem(CURRENT_USER_KEY);
+                        }
+                    } catch {
+                        currentUser = null;
+                    }
+                }
+            } catch (err) {
+                console.error('Error loading users:', err);
+                // Fallback a localStorage
+                const saved = localStorage.getItem(USERS_KEY);
+                if (saved) {
+                    try {
+                        users = JSON.parse(saved);
+                    } catch {
+                        users = [];
+                    }
                 }
             }
         }
 
         function saveUsers() {
             localStorage.setItem(USERS_KEY, JSON.stringify(users));
+        }
+
+        async function saveUserToSupabase(user) {
+            if (demoMode || !sbClient) return;
+            try {
+                const { error } = await sbClient.from('users').upsert(user, { onConflict: 'id' });
+                if (error) throw error;
+            } catch (err) {
+                console.error('Error saving user to Supabase:', err);
+            }
         }
 
         function saveCurrentUser() {
@@ -607,7 +650,7 @@
             }
         }
 
-        function createUser(name) {
+        async function createUser(name) {
             const trimmed = name.trim();
             if (!trimmed) return;
             const newUser = {
@@ -617,6 +660,7 @@
             };
             users.push(newUser);
             saveUsers();
+            await saveUserToSupabase(newUser);
             renderUserList();
             $('#new-user-name').value = '';
             selectUser(newUser.id);
@@ -826,7 +870,7 @@ function updateStats() {
             checkLoginAndInit();
         }
 
-        function switchToSupabase() {
+        async function switchToSupabase() {
             demoMode = false;
             updateModeButton();
             const saved = localStorage.getItem(CONFIG_KEY);
@@ -835,7 +879,7 @@ function updateStats() {
                     const { url, key } = JSON.parse(saved);
                     if (url && key) {
                         initSupabase(url, key);
-                        checkLoginAndInit();
+                        await checkLoginAndInit();
                         return;
                     }
                 } catch {}
@@ -843,8 +887,8 @@ function updateStats() {
             openConfigModal();
         }
 
-        function checkLoginAndInit() {
-            loadUsers();
+        async function checkLoginAndInit() {
+            await loadUsers();
             if (currentUser) {
                 updateUserBadge();
                 const app = $('#app');
@@ -2051,7 +2095,7 @@ function showResultRegistered(voter) {
         // ============================================
         // INICIALIZACIÓN
         // ============================================
-        function init() {
+        async function init() {
             initEvents();
 
             // Online/Offline detection
@@ -2073,10 +2117,10 @@ function showResultRegistered(voter) {
                 initSupabase(PRODUCTION_CONFIG.url, PRODUCTION_CONFIG.key);
                 // No mostrar botón de modo demo
                 $('#toggle-mode').style.display = 'none';
-                checkLoginAndInit();
+                await checkLoginAndInit();
             } else if (loadSavedConfig()) {
                 // Config guardada en localStorage
-                checkLoginAndInit();
+                await checkLoginAndInit();
             } else {
                 // Fallback: modo demo
                 enableDemoMode();
