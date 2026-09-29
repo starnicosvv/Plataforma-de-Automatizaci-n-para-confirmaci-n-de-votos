@@ -439,6 +439,16 @@
 
     <script>
         // ============================================
+        // CONFIGURACIÓN DE PRODUCCIÓN (auto-conectar a Supabase)
+        // ============================================
+        // ⚠️ EDITAR AQUÍ TUS CREDENCIALES PARA PRODUCCIÓN
+        const PRODUCTION_CONFIG = {
+            enabled: true,  // Poner false para volver a modo demo
+            url: 'https://nyrkgmuvsuxhdmfdhdrc.supabase.co',
+            key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55cmtnbXV2c3V4aGRtZmRoZHJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2ODg2NTcsImV4cCI6MjEwNjI2NDY1N30.t5WDEcS93tHLp_Xj7w2vZNATkTkP-fCIfSFnujqbFiI'
+        };
+
+        // ============================================
         // CONFIGURACIÓN Y ESTADO GLOBAL
         // ============================================
         const CONFIG_KEY = 'padron_supabase_config';
@@ -1997,8 +2007,21 @@ function showResultRegistered(voter) {
             });
             if (!navigator.onLine) $('#offline-banner').classList.remove('hidden');
 
-            // Iniciar en modo demo por defecto
-            enableDemoMode();
+            // MODO PRODUCCIÓN: Auto-conectar a Supabase si PRODUCTION_CONFIG.enabled = true
+            if (PRODUCTION_CONFIG.enabled && PRODUCTION_CONFIG.url && PRODUCTION_CONFIG.key) {
+                // Guardar en localStorage para persistencia
+                saveConfig(PRODUCTION_CONFIG.url, PRODUCTION_CONFIG.key);
+                initSupabase(PRODUCTION_CONFIG.url, PRODUCTION_CONFIG.key);
+                // No mostrar botón de modo demo
+                $('#toggle-mode').style.display = 'none';
+                checkLoginAndInit();
+            } else if (loadSavedConfig()) {
+                // Config guardada en localStorage
+                checkLoginAndInit();
+            } else {
+                // Fallback: modo demo
+                enableDemoMode();
+            }
         }
 
         // Start
