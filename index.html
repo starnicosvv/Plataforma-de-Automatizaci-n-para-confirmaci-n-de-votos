@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Control de Padrón Electoral</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗳️</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="supabase.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
@@ -908,8 +909,12 @@ function updateStats() {
                         handleSearchResult(payload.new);
                     }
                 })
-                .subscribe((status) => {
+                .subscribe((status, err) => {
                     console.log('Realtime status:', status);
+                    if (status === 'CHANNEL_ERROR' || err) {
+                        console.error('Realtime error:', err);
+                        showToast('Realtime no disponible. Ejecuta en SQL: alter publication supabase_realtime add table padron;', 'warning', 8000);
+                    }
                 });
         }
 
@@ -1470,20 +1475,43 @@ function showResultRegistered(voter) {
                         }
                         return;
                     }
+                    // Primero obtener el registro actual para preservar nombre, orden, mesa, referente
+                    let existingNombre = nombre;
+                    let existingOrden = orden;
+                    let existingMesa = mesa;
+                    let existingReferente = referente;
+                    
+                    if (!isUnknown) {
+                        try {
+                            const { data: existing } = await sbClient
+                                .from('padron')
+                                .select('nombre, orden, mesa, referente')
+                                .eq('cedula', cedula)
+                                .single();
+                            if (existing) {
+                                existingNombre = existing.nombre;
+                                existingOrden = existing.orden;
+                                existingMesa = existing.mesa;
+                                existingReferente = existing.referente;
+                            }
+                        } catch (e) {
+                            console.warn('Could not fetch existing record:', e);
+                        }
+                    }
+                    
                     const updateData = {
+                        cedula,
+                        nombre: existingNombre,
+                        orden: existingOrden,
+                        mesa: existingMesa,
+                        referente: existingReferente,
                         ya_registrado: true,
                         fecha_registro: now,
                         registrado_por: registradoPor
                     };
-                    if (isUnknown) {
-                        updateData.nombre = nombre;
-                        updateData.orden = orden;
-                        updateData.mesa = mesa;
-                        updateData.referente = referente;
-                    }
                     const { error } = await sbClient
                         .from('padron')
-                        .upsert({ cedula, ...updateData }, { onConflict: 'cedula' });
+                        .upsert(updateData, { onConflict: 'cedula' });
                     if (error) throw error;
                 }
 
