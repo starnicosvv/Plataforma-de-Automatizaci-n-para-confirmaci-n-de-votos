@@ -1,0 +1,14 @@
+# Excel temp files
+~$*.xlsx
+~$*.xls
+Libro2.xlsx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

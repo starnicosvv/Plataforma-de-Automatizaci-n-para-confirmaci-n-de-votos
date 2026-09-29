@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-    <style>
+<style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         * { font-family: 'Inter', sans-serif; }
         .focus-ring:focus { outline: none; ring: 2px; ring-offset: 2px; }
@@ -24,11 +24,26 @@
         @keyframes toastIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
         .toast-exit { animation: toastOut 0.3s ease-in forwards; }
         @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
-    </style>
+        .copyable:hover { background-color: rgba(59, 130, 246, 0.1); cursor: copy; }
+        .offline-banner { animation: slideDown 0.3s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-100%); } to { opacity: 1; transform: translateY(0); } }
+        .confirm-modal-overlay { animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .confirm-modal { animation: zoomIn 0.2s ease-out; }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+</style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Toast Container -->
     <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 w-80 max-w-full"></div>
+
+    <!-- Offline Banner -->
+    <div id="offline-banner" class="hidden offline-banner fixed top-0 left-0 right-0 z-50 bg-amber-600 text-white text-center py-2 px-4 text-sm font-medium">
+        <span class="flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            Sin conexión — Los cambios se sincronizarán al reconectar
+        </span>
+    </div>
 
     <!-- Login Modal -->
     <div id="login-modal" class="fixed inset-0 z-60 flex items-center justify-center bg-black/50 p-4">
@@ -75,6 +90,20 @@
                 <button id="save-config" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors">Guardar y Conectar</button>
                 <button id="skip-config" class="px-4 py-3 text-gray-600 hover:text-gray-800 font-medium">Omitir</button>
                 <button id="clear-config" class="px-4 py-3 text-red-600 hover:text-red-800 font-medium border border-red-300 rounded-lg transition-colors" title="Borrar configuración guardada">Limpiar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Clear Config Modal -->
+    <div id="confirm-clear-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4 confirm-modal-overlay">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 card-enter confirm-modal">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-gray-900">Confirmar limpieza</h2>
+            </div>
+            <p class="text-gray-600 mb-6">¿Borrar la configuración de Supabase guardada? Se cerrará la sesión y deberás ingresar las credenciales nuevamente.</p>
+            <div class="flex gap-3 justify-end">
+                <button id="cancel-clear-config" class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium">Cancelar</button>
+                <button id="confirm-clear-config" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors">Sí, borrar</button>
             </div>
         </div>
     </div>
@@ -245,6 +274,14 @@
                                 Ver Datos Importados
                             </button>
                             <hr class="my-1 border-gray-200">
+                            <button id="menu-export-backup" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Exportar Backup (JSON)
+                            </button>
+                            <button id="menu-import-backup" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Importar Backup (JSON)
+                            </button>
                             <button id="menu-refresh-stats" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                                 <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                                 Actualizar Estadísticas
@@ -339,7 +376,18 @@
                 <h2 class="text-2xl font-bold text-gray-900">Cargar Padrón desde Excel</h2>
                 <button id="close-import" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
-            <p class="text-gray-600 mb-6">Selecciona un archivo <code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">.xlsx</code> con las columnas <strong>cedula</strong> y <strong>nombre</strong> (opcional: <strong>orden</strong>, <strong>mesa</strong>, <strong>referente</strong>). Se usará <code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">upsert</code> para evitar duplicados.</p>
+            <p class="text-gray-600 mb-4">Selecciona un archivo <code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">.xlsx</code> con las columnas <strong>cedula</strong> y <strong>nombre</strong> (opcional: <strong>orden</strong>, <strong>mesa</strong>, <strong>referente</strong>). Se usará <code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">upsert</code> para evitar duplicados.</p>
+            <details class="mb-4 group">
+                <summary class="text-sm text-blue-600 hover:text-blue-800 cursor-pointer font-medium flex items-center gap-1">
+                    <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    Ver formato de columnas esperado
+                </summary>
+                <div class="mt-2 p-3 bg-gray-50 rounded-lg text-xs font-mono overflow-x-auto">
+                    <pre class="text-gray-700">cedula, nombre, orden, mesa, referente
+1234567, Juan Pérez, 1, 101, Carlos R.
+8765432, María López, 2, 101, Ana M.</pre>
+                </div>
+            </details>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Archivo Excel</label>
                 <div class="relative">
@@ -435,6 +483,34 @@
                     setTimeout(() => toast.remove(), 300);
                 }
             }, duration);
+        }
+
+        function playSound(type = 'success') {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                if (type === 'success') {
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2); // G5
+                } else if (type === 'error') {
+                    osc.frequency.setValueAtTime(200, ctx.currentTime);
+                    osc.frequency.setValueAtTime(150, ctx.currentTime + 0.15);
+                } else {
+                    osc.frequency.setValueAtTime(440, ctx.currentTime); // A4
+                }
+                
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.5);
+            } catch {
+                // Silently fail if audio not supported
+            }
         }
 
         function formatDate(isoString) {
@@ -926,7 +1002,7 @@ function updateStats() {
                     </div>
                     <p class="text-sm text-gray-500 uppercase tracking-wider mb-1">PERSONA HABILITADA</p>
                     <h3 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">${escapeHtml(voter.nombre)}</h3>
-                    <p class="text-gray-500 mb-3">Cédula: <span class="font-mono font-medium text-gray-700">${escapeHtml(voter.cedula)}</span></p>
+                    <p class="text-gray-500 mb-3">Cédula: <span id="copy-cedula" class="font-mono font-medium text-gray-700 copyable" title="Click para copiar">${escapeHtml(voter.cedula)}</span></p>
                     ${ordenMesaBoxes}
                     ${referenteInfo}
                     <button id="vote-btn" class="w-full md:w-64 mx-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-8 rounded-xl text-lg transition-colors flex items-center justify-center gap-2">
@@ -936,6 +1012,9 @@ function updateStats() {
                 </div>
             `;
             $('#vote-btn').onclick = () => registerVote(voter.cedula, voter.nombre);
+            $('#copy-cedula').onclick = () => copyToClipboard(voter.cedula, 'Cédula copiada');
+            if (voter.orden) $('#copy-orden').onclick = () => copyToClipboard(voter.orden.toString(), 'Orden copiado');
+            if (voter.mesa) $('#copy-mesa').onclick = () => copyToClipboard(voter.mesa.toString(), 'Mesa copiada');
             $('#activity-section').classList.remove('hidden');
         }
 
@@ -946,13 +1025,13 @@ function showResultRegistered(voter) {
                     ${voter.orden ? `
                         <div class="bg-white border-2 border-green-300 rounded-xl px-6 py-3 min-w-[120px] shadow-sm">
                             <p class="text-xs text-gray-500 uppercase tracking-wider mb-0.5">ORDEN</p>
-                            <p class="text-2xl md:text-3xl font-bold text-green-700 font-mono">${escapeHtml(voter.orden.toString())}</p>
+                            <p id="copy-orden" class="text-2xl md:text-3xl font-bold text-green-700 font-mono copyable" title="Click para copiar">${escapeHtml(voter.orden.toString())}</p>
                         </div>
                     ` : ''}
                     ${voter.mesa ? `
                         <div class="bg-white border-2 border-blue-300 rounded-xl px-6 py-3 min-w-[120px] shadow-sm">
                             <p class="text-xs text-gray-500 uppercase tracking-wider mb-0.5">MESA</p>
-                            <p class="text-2xl md:text-3xl font-bold text-blue-700 font-mono">${escapeHtml(voter.mesa.toString())}</p>
+                            <p id="copy-mesa" class="text-2xl md:text-3xl font-bold text-blue-700 font-mono copyable" title="Click para copiar">${escapeHtml(voter.mesa.toString())}</p>
                         </div>
                     ` : ''}
                 </div>
@@ -966,7 +1045,7 @@ function showResultRegistered(voter) {
                     <p class="text-sm text-gray-500 uppercase tracking-wider mb-1">¡ATENCIÓN!</p>
                     <h3 class="text-2xl md:text-3xl font-bold text-red-700 mb-2">ESTA PERSONA YA ESTÁ REGISTRADA</h3>
                     <p class="text-gray-900 text-xl font-medium mb-4">${escapeHtml(voter.nombre)}</h3>
-                    <p class="text-gray-500 mb-3">Cédula: <span class="font-mono font-medium text-gray-700">${escapeHtml(voter.cedula)}</span></p>
+                    <p class="text-gray-500 mb-3">Cédula: <span id="copy-cedula" class="font-mono font-medium text-gray-700 copyable" title="Click para copiar">${escapeHtml(voter.cedula)}</span></p>
                     ${ordenMesaBoxes}
                     ${referenteInfo}
                     <div class="bg-red-100 rounded-xl p-4 inline-block">
@@ -979,6 +1058,9 @@ function showResultRegistered(voter) {
                     </button>
                 </div>
             `;
+            $('#copy-cedula').onclick = () => copyToClipboard(voter.cedula, 'Cédula copiada');
+            if (voter.orden) $('#copy-orden').onclick = () => copyToClipboard(voter.orden.toString(), 'Orden copiado');
+            if (voter.mesa) $('#copy-mesa').onclick = () => copyToClipboard(voter.mesa.toString(), 'Mesa copiada');
             $('#activity-section').classList.remove('hidden');
         }
 
@@ -1239,6 +1321,63 @@ function showResultRegistered(voter) {
             URL.revokeObjectURL(link.href);
         }
 
+        function exportBackup() {
+            const backup = {
+                version: '1.0',
+                timestamp: new Date().toISOString(),
+                demoData: Array.from(demoData.values()),
+                users,
+                currentUser,
+                activityLog,
+                config: localStorage.getItem(CONFIG_KEY)
+            };
+            const json = JSON.stringify(backup, null, 2);
+            const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `padron-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            showToast('Backup exportado (JSON)', 'success');
+        }
+
+        function importBackup(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const backup = JSON.parse(e.target.result);
+                    if (backup.demoData) {
+                        demoData = new Map(backup.demoData.map(v => [v.cedula, v]));
+                        saveDemoData();
+                    }
+                    if (backup.users) {
+                        users = backup.users;
+                        saveUsers();
+                    }
+                    if (backup.currentUser) {
+                        currentUser = backup.currentUser;
+                        saveCurrentUser();
+                        updateUserBadge();
+                    }
+                    if (backup.activityLog) {
+                        activityLog = backup.activityLog;
+                        renderActivity();
+                    }
+                    if (backup.config) {
+                        localStorage.setItem(CONFIG_KEY, backup.config);
+                    }
+                    updateStats();
+                    showToast('Backup importado correctamente', 'success');
+                    // Reload to apply config
+                    setTimeout(() => location.reload(), 1000);
+                } catch (err) {
+                    showToast(`Error al importar backup: ${err.message}`, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
         // ============================================
         // REGISTRO
         // ============================================
@@ -1311,6 +1450,7 @@ function showResultRegistered(voter) {
                 }
 
                 showToast(`Registro confirmado para ${nombre}`, 'success');
+                playSound('success');
                 addActivity(cedula, nombre, 'REGISTRO');
 
                 const voter = demoMode ? demoData.get(cedula) : null;
@@ -1353,6 +1493,7 @@ function showResultRegistered(voter) {
 
             } catch (err) {
                 showToast(`Error al registrar: ${err.message}`, 'error');
+                playSound('error');
                 if (btn) {
                     btn.disabled = false;
                     btn.innerHTML = `
@@ -1675,6 +1816,14 @@ function showResultRegistered(voter) {
             return div.innerHTML;
         }
 
+        function copyToClipboard(text, message = 'Copiado') {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(message, 'success', 2000);
+            }).catch(() => {
+                showToast('Error al copiar', 'error');
+            });
+        }
+
         // ============================================
         // EVENT LISTENERS
         // ============================================
@@ -1687,6 +1836,15 @@ function showResultRegistered(voter) {
                 showToast('Configuración omitida. Podrá configurar después.', 'info');
             };
             $('#clear-config').onclick = () => {
+                closeConfigModal();
+                $('#confirm-clear-modal').classList.remove('hidden');
+                $('#confirm-clear-modal').classList.add('flex');
+            };
+            $('#cancel-clear-config').onclick = () => {
+                $('#confirm-clear-modal').classList.add('hidden');
+                $('#confirm-clear-modal').classList.remove('flex');
+            };
+            $('#confirm-clear-config').onclick = () => {
                 localStorage.removeItem(CONFIG_KEY);
                 if (sbClient) {
                     try { sbClient.auth.signOut(); } catch {}
@@ -1694,7 +1852,8 @@ function showResultRegistered(voter) {
                     channel = null;
                 }
                 updateConnectionStatus(false);
-                closeConfigModal();
+                $('#confirm-clear-modal').classList.add('hidden');
+                $('#confirm-clear-modal').classList.remove('flex');
                 showToast('Configuración borrada. Vuelva a ingresar credenciales.', 'info');
             };
             $('#save-config').onclick = handleSaveConfig;
@@ -1723,7 +1882,12 @@ function showResultRegistered(voter) {
                 if (e.key === 'Enter') searchCedula(e.target.value);
             };
             $('#cedula-input').oninput = (e) => {
-                e.target.value = e.target.value.replace(/[^\d]/g, '').slice(0, 20);
+                const val = e.target.value.replace(/[^\d]/g, '').slice(0, 8);
+                e.target.value = val;
+                // Visual feedback for PY cédula length (7-8 dígitos)
+                e.target.classList.toggle('border-amber-400', val.length > 0 && val.length < 7);
+                e.target.classList.toggle('border-green-400', val.length >= 7);
+                e.target.classList.toggle('border-gray-200', val.length === 0);
             };
             $('#clear-activity').onclick = () => {
                 activityLog = [];
@@ -1774,6 +1938,22 @@ function showResultRegistered(voter) {
                 showToast('Estadísticas actualizadas', 'info');
             };
 
+            // Export backup
+            $('#menu-export-backup').onclick = () => {
+                closeMenuDropdown();
+                exportBackup();
+            };
+
+            // Import backup
+            $('#menu-import-backup').onclick = () => {
+                closeMenuDropdown();
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = (e) => importBackup(e.target.files[0]);
+                input.click();
+            };
+
             // Login modal
             $('#create-user').onclick = () => createUser($('#new-user-name').value);
             $('#new-user-name').onkeydown = (e) => {
@@ -1804,6 +1984,18 @@ function showResultRegistered(voter) {
         // ============================================
         function init() {
             initEvents();
+
+            // Online/Offline detection
+            window.addEventListener('online', () => {
+                $('#offline-banner').classList.add('hidden');
+                if (!demoMode && sbClient) updateStats();
+                showToast('Conexión restablecida', 'success');
+            });
+            window.addEventListener('offline', () => {
+                $('#offline-banner').classList.remove('hidden');
+                showToast('Sin conexión — modo offline', 'warning', 5000);
+            });
+            if (!navigator.onLine) $('#offline-banner').classList.remove('hidden');
 
             // Iniciar en modo demo por defecto
             enableDemoMode();

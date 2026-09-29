@@ -4,15 +4,23 @@ Sistema web para control de padrón electoral y registro de asistencia/votos dis
 
 ## Características Principales
 
-- **Búsqueda por cédula** ultra-rápida con autofoco y Enter para consultar
-- **Tres estados visuales**: Habilitado (verde), Ya Registrado (rojo), Desconocido (ámbar)
-- **Registro de personas no cargadas** en el padrón (modal para ingresar nombre)
+- **Búsqueda por cédula** ultra-rápida con autofoco, Enter y validación visual (PY 7-8 dígitos)
+- **Tres estados visuales**: Habilitado (verde cajas grandes Orden/Mesa), Ya Registrado (rojo), Desconocido (ámbar)
+- **Orden, Mesa, Referente**: Cajas grandes tipo tarjeta (verde/azul) + texto pequeño Referente
+- **Registro de personas no cargadas** en el padrón (modal con Nombre + Orden + Mesa + Referente + link TSJE)
 - **Multi-usuario**: Login de operadores, cada registro guarda quién lo realizó
-- **Tiempo real**: Sincronización instantánea via Supabase Realtime entre notebooks
-- **Importación Excel** masiva con upsert (evita duplicados, respeta registros previos)
+- **Tiempo real**: Sincronización instantánea via Supabase Realtime entre notebooks/pestañas
+- **Importación Excel** masiva con upsert, deduplicación automática, `ignoreDuplicates: true`, barra progreso
 - **Modo Demo offline** con datos de prueba para testear sin configurar Supabase
 - **Estadísticas en vivo**: Total, Registrados, Pendientes
-- **Log de actividad** con timestamp y operador
+- **Log de actividad** con timestamp, operador, filtros, export CSV
+- **Ver datos importados**: Tabla buscable, filtros, export CSV con nuevos campos
+- **Config Supabase robusta**: Auto-limpia URL (`/rest/v1/`), limpia cliente anterior, botón "Limpiar" con confirmación
+- **Copiar al portapapeles**: Click en cédula/orden/mesa → toast "Copiado"
+- **Sonidos**: Beep éxito/error al registrar (Web Audio API)
+- **Detección offline**: Banner automático + sincronización al reconectar
+- **Backup/Restore**: Export/Import JSON completo (datos + config + usuarios + log)
+- **Validación cédula PY**: Feedback visual en tiempo real (ámbar <7 dígitos, verde ≥7)
 
 ## Stack Tecnológico
 
@@ -123,28 +131,42 @@ alter publication supabase_realtime add table padron;
 ### Buscar y Registrar
 
 1. Escribir cédula en el campo central → **Enter** o botón **"Consultar"**
+2. **Validación visual**: borde ámbar (<7 dígitos), verde (≥7 dígitos)
 
 **Resultado A - En padrón, no registrado (Verde)**
 - Nombre grande en verde
-- Botón **"REGISTRAR"** → confirma, muestra toast, limpia campo
+- **Cajas grandes**: ORDEN (verde) / MESA (azul) — click para copiar
+- **Referente** texto pequeño abajo
+- Botón **"REGISTRAR"** → confirma, sonido éxito, toast, limpia campo
 
 **Resultado B - Ya registrado (Rojo)**
 - Alerta: "¡ATENCIÓN! ESTA PERSONA YA ESTÁ REGISTRADA"
+- Cajas grandes Orden/Mesa + Referente
 - Muestra fecha/hora exacta y **quién la registró**
 - Botón deshabilitado
 
 **Resultado C - No está en padrón (Ámbar)**
 - "NO ENCONTRADA EN PADRÓN" + "Nombre: Desconocido"
-- Botón **"REGISTRAR PERSONA DESCONOCIDA"** → modal para ingresar nombre
-- Al confirmar: crea registro + marca como registrado
+- Botón **"REGISTRAR PERSONA DESCONOCIDA"** → modal para ingresar Nombre + Orden + Mesa + Referente + link a padron.tsje.gov.py
+- Al confirmar: crea registro + marca como registrado + sonido éxito
+
+### Copiar datos al portapapeles
+- Click en **Cédula** → "Cédula copiada"
+- Click en **Orden** (caja verde) → "Orden copiado"
+- Click en **Mesa** (caja azul) → "Mesa copiado"
 
 ### Cargar Padrón (Excel)
 
 1. Botón **"Cargar Padrón"** → selecciona `.xlsx`/`.xls`
-2. Columnas requeridas: `cedula`, `nombre` (case-insensitive)
-3. Vista previa de primeras 5 filas
-4. **"Importar Padrón"** → proceso en lotes de 500 con barra de progreso
-5. **Upsert**: actualiza nombres si cédula existe, **no toca** `ya_registrado` ni `fecha_registro`
+2. Columnas: `cedula`, `nombre` (requeridas) + `orden`, `mesa`, `referente` (opcionales)
+3. **Duplicados**: se eliminan automáticamente (keep last)
+4. Vista previa de primeras 5 filas con ejemplo de formato
+5. **"Importar Padrón"** → lotes de 500, barra progreso, `ignoreDuplicates: true`
+6. **Upsert**: actualiza nombres si cédula existe, **no toca** `ya_registrado` ni `fecha_registro`
+
+### Backup / Restore (Menú ▼)
+- **Exportar Backup (JSON)**: Descarga todo (padrón + usuarios + log + config)
+- **Importar Backup (JSON)**: Restaura estado completo + recarga app
 
 ### Estadísticas y Actividad
 
@@ -237,6 +259,25 @@ sbClient.channel('padron-changes')
   .on('postgres_changes', { event: '*', schema: 'public', table: 'padron' }, handleChange)
   .subscribe();
 ```
+
+## Deploy a Producción (Vercel / Netlify / Cloudflare Pages)
+
+### Vercel (recomendado, gratis)
+1. `vercel.com` → **Add New Project** → Import GitHub repo
+2. Framework: **Other** · Build: (vacío) · Output: `.`
+3. **Deploy** → URL `https://padron-xxx.vercel.app` con HTTPS automático
+
+### Netlify
+1. `netlify.com` → **Add new site** → Import from Git
+2. Build command: (vacío) · Publish directory: `.`
+3. **Deploy**
+
+### Cloudflare Pages
+1. `dash.cloudflare.com` → Pages → Connect to Git
+2. Build: (vacío) · Output: `.`
+3. **Deploy** (gratis, sin límites bandwidth)
+
+> **Nota**: En todos los casos, servir como sitio estático. El `index.html` contiene todo.
 
 ## Solución de Problemas
 
