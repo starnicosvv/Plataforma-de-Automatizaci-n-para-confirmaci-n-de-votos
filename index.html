@@ -1248,14 +1248,31 @@ function showResultRegistered(voter) {
             $('#view-data-modal').classList.remove('flex');
         }
 
-        function renderViewDataModal() {
+        async function renderViewDataModal() {
             const search = $('#view-data-search').value.toLowerCase().trim();
             const statusFilter = $('#view-data-filter-status').value;
 
-            let data = Array.from(demoData.values());
-            if (!demoMode && sbClient) {
-                // En modo Supabase, solo mostramos lo que tenemos en localStorage
-                // Para ver todos, necesitaríamos hacer fetch a Supabase
+            let data = [];
+            if (demoMode) {
+                data = Array.from(demoData.values());
+            } else if (sbClient) {
+                try {
+                    let query = sbClient.from('padron').select('*').order('cedula');
+                    if (statusFilter === 'registered') {
+                        query = query.eq('ya_registrado', true);
+                    } else if (statusFilter === 'pending') {
+                        query = query.eq('ya_registrado', false);
+                    }
+                    const { data: supabaseData, error } = await query.limit(5000);
+                    if (error) throw error;
+                    data = supabaseData || [];
+                } catch (err) {
+                    console.error('Error fetching data:', err);
+                    showToast('Error al cargar datos de Supabase', 'error');
+                    data = Array.from(demoData.values());
+                }
+            } else {
+                data = Array.from(demoData.values());
             }
 
             let filtered = data;
@@ -1264,11 +1281,6 @@ function showResultRegistered(voter) {
                     v.cedula.includes(search) ||
                     v.nombre.toLowerCase().includes(search)
                 );
-            }
-            if (statusFilter === 'registered') {
-                filtered = filtered.filter(v => v.ya_registrado);
-            } else if (statusFilter === 'pending') {
-                filtered = filtered.filter(v => !v.ya_registrado);
             }
 
             const tbody = $('#view-data-rows');
@@ -1300,8 +1312,24 @@ function showResultRegistered(voter) {
             `).join('');
         }
 
-        function exportViewDataCSV() {
-            const data = Array.from(demoData.values());
+        async function exportViewDataCSV() {
+            let data = [];
+            if (demoMode) {
+                data = Array.from(demoData.values());
+            } else if (sbClient) {
+                try {
+                    const { data: supabaseData, error } = await sbClient.from('padron').select('*').order('cedula');
+                    if (error) throw error;
+                    data = supabaseData || [];
+                } catch (err) {
+                    console.error('Error fetching data:', err);
+                    showToast('Error al cargar datos de Supabase', 'error');
+                    data = Array.from(demoData.values());
+                }
+            } else {
+                data = Array.from(demoData.values());
+            }
+
             if (data.length === 0) {
                 showToast('No hay datos para exportar', 'warning');
                 return;
