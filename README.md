@@ -109,7 +109,7 @@ create table padron (
 alter publication supabase_realtime add table padron;
 ```
 
-### 2b. Crear tabla `users` (para compartir usuarios entre dispositivos)
+### 2b. Crear tabla `users` (para compartir usuarios entre dispositivos - **DEPRECADO**, usar Auth)
 
 ```sql
 -- Ejecutar en SQL Editor de Supabase
@@ -130,6 +130,82 @@ create policy "Todos pueden leer usuarios" on users
 
 create policy "Todos pueden insertar usuarios" on users
   for insert with check (true);
+```
+
+### 2c. Configurar Autenticación y Sedés (NUEVO - Recomendado)
+
+**1. Habilitar Auth en Supabase:**
+- Dashboard → Authentication → Providers → Email → **Enable Email provider**
+- Desactivar "Confirm email" para desarrollo (opcional)
+
+**2. Crear tablas de perfiles y sedés:**
+
+```sql
+-- Tabla de sedés (ubicaciones)
+create table sedes (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null unique,
+  created_at timestamptz default now()
+);
+
+-- Tabla de perfiles (extiende auth.users)
+create table profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text not null,
+  nombre text not null,
+  sede_id uuid references sedes(id),
+  role text default 'operador' check (role in ('admin', 'operador')),
+  created_at timestamptz default now()
+);
+
+-- Habilitar Realtime
+alter publication supabase_realtime add table sedes;
+alter publication supabase_realtime add table profiles;
+
+-- RLS para sedes
+alter table sedes enable row level security;
+create policy "Todos pueden leer sedes" on sedes for select using (true);
+create policy "Admins pueden insertar sedes" on sedes for insert with check (
+  exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+);
+
+-- RLS para profiles
+alter table profiles enable row level security;
+create policy "Usuarios ven su perfil" on profiles for select using (auth.uid() = id);
+create policy "Admins ven todos los perfiles" on profiles for select using (
+  exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+);
+create policy "Users insertan su perfil" on profiles for insert with check (auth.uid() = id);
+create policy "Admins actualizan perfiles" on profiles for update using (
+  exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+);
+
+-- Trigger para crear perfil automáticamente al registrarse
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  insert into public.profiles (id, email, nombre, role)
+  values (new.id, new.email, new.raw_user_meta_data->>'nombre', 'operador');
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+```
+
+**3. Crear sedés y primer admin:**
+```sql
+-- Insertar sedés (ej: 3 sedés)
+insert into sedes (nombre) values 
+  ('Sede Central'),
+  ('Sede Norte'),
+  ('Sede Sur');
+
+-- El primer usuario que se registre vía la app será 'operador'
+-- Para hacer admin, ejecutar manualmente:
+-- update profiles set role = 'admin' where email = 'admin@ejemplo.com';
 ```
 
 ### 3. Configurar en la app

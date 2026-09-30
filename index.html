@@ -55,17 +55,54 @@
                 </div>
             </div>
             <h2 class="text-2xl font-bold text-gray-900 text-center mb-2">Iniciar Sesión</h2>
-            <p class="text-gray-600 text-center mb-6">Selecciona tu usuario o crea uno nuevo</p>
+            <p class="text-gray-600 text-center mb-6">Ingresa tus credenciales</p>
             
-            <div id="user-list" class="space-y-2 mb-4 max-h-60 overflow-y-auto"></div>
-            
-            <div class="border-t border-gray-200 pt-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">O crea un nuevo usuario</label>
-                <div class="flex gap-2">
-                    <input type="text" id="new-user-name" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20" placeholder="Tu nombre" maxlength="50">
-                    <button id="create-user" class="px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors whitespace-nowrap">Crear</button>
+            <!-- Login Form -->
+            <div id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="login-email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20" placeholder="usuario@sede.com" autocomplete="email">
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                    <input type="password" id="login-password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20" placeholder="Contraseña" autocomplete="current-password">
+                </div>
+                <button id="login-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m4 4H7m14 0l-4 4m0 0l-4-4m4 4H3"></path></svg>
+                    Iniciar Sesión
+                </button>
             </div>
+            
+            <!-- Register Form (Admin only - hidden by default) -->
+            <div id="register-form" class="hidden space-y-4 mt-4 border-t border-gray-200 pt-4">
+                <h3 class="text-lg font-semibold text-gray-900 text-center">Crear Usuario (Admin)</h3>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="reg-email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20" placeholder="nuevo@sede.com" autocomplete="email">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                    <input type="password" id="reg-password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20" placeholder="Mínimo 6 caracteres" autocomplete="new-password" minlength="6">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+                    <input type="text" id="reg-name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20" placeholder="Juan Pérez" maxlength="50">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sede</label>
+                    <select id="reg-sede" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20">
+                        <option value="">Seleccionar sede</option>
+                    </select>
+                </div>
+                <button id="register-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors">Crear Usuario</button>
+                <button id="show-login-btn" type="button" class="w-full text-center text-sm text-gray-600 hover:text-gray-800">Volver a iniciar sesión</button>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button id="show-register-btn" type="button" class="text-sm text-blue-600 hover:text-blue-800">¿Eres admin? Crear usuario</button>
+            </div>
+            
+            <div id="login-error" class="hidden mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
         </div>
     </div>
 
@@ -258,6 +295,7 @@
                     <div id="user-badge" class="hidden items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-sm font-medium border border-green-200">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                         <span id="current-user-name"></span>
+                        <span id="current-user-sede" class="text-xs bg-green-100 px-2 py-0.5 rounded-full"></span>
                         <button id="switch-user" class="ml-1 text-green-600 hover:text-green-800 text-xs font-normal">cambiar</button>
                     </div>
                     <!-- Menu Dropdown -->
@@ -535,162 +573,107 @@
         }
 
         // ============================================
-        // GESTIÓN DE USUARIOS
+        // GESTIÓN DE USUARIOS Y SEDES (Supabase Auth)
         // ============================================
-        async function loadUsers() {
-            if (demoMode) {
-                const saved = localStorage.getItem(USERS_KEY);
-                if (saved) {
-                    try {
-                        users = JSON.parse(saved);
-                    } catch {
-                        users = [];
-                    }
-                }
-                // Cargar usuario actual
-                const currentSaved = localStorage.getItem(CURRENT_USER_KEY);
-                if (currentSaved) {
-                    try {
-                        currentUser = JSON.parse(currentSaved);
-                        if (!users.find(u => u.id === currentUser.id)) {
-                            currentUser = null;
-                            localStorage.removeItem(CURRENT_USER_KEY);
-                        }
-                    } catch {
-                        currentUser = null;
-                    }
-                }
-                return;
-            }
-            // Modo Supabase: cargar usuarios desde la base de datos
-            if (!sbClient) return;
-            try {
-                const { data, error } = await sbClient.from('users').select('*').order('created_at');
-                if (error) throw error;
-                users = data || [];
-                // Cargar usuario actual desde localStorage (sesión local)
-                const currentSaved = localStorage.getItem(CURRENT_USER_KEY);
-                if (currentSaved) {
-                    try {
-                        currentUser = JSON.parse(currentSaved);
-                        if (!users.find(u => u.id === currentUser.id)) {
-                            currentUser = null;
-                            localStorage.removeItem(CURRENT_USER_KEY);
-                        }
-                    } catch {
-                        currentUser = null;
-                    }
-                }
-            } catch (err) {
-                console.error('Error loading users:', err);
-                // Fallback a localStorage
-                const saved = localStorage.getItem(USERS_KEY);
-                if (saved) {
-                    try {
-                        users = JSON.parse(saved);
-                    } catch {
-                        users = [];
-                    }
-                }
-            }
-        }
+        let currentSession = null;
+        let currentProfile = null; // {id, name, email, sede_id, sede_nombre, role}
+        let sedes = []; // [{id, nombre}]
 
-        function saveUsers() {
-            localStorage.setItem(USERS_KEY, JSON.stringify(users));
-        }
-
-        async function saveUserToSupabase(user) {
+        async function loadSedes() {
             if (demoMode || !sbClient) return;
             try {
-                const { error } = await sbClient.from('users').upsert(user, { onConflict: 'id' });
+                const { data, error } = await sbClient.from('sedes').select('*').order('nombre');
                 if (error) throw error;
+                sedes = data || [];
+                // Llenar select de sedes en formulario de registro
+                const select = $('#reg-sede');
+                if (select) {
+                    select.innerHTML = '<option value="">Seleccionar sede</option>' +
+                        sedes.map(s => `<option value="${s.id}">${escapeHtml(s.nombre)}</option>`).join('');
+                }
             } catch (err) {
-                console.error('Error saving user to Supabase:', err);
+                console.error('Error loading sedes:', err);
             }
         }
 
-        function saveCurrentUser() {
-            if (currentUser) {
-                localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
-            } else {
-                localStorage.removeItem(CURRENT_USER_KEY);
-            }
-        }
-
-        function renderUserList() {
-            const list = $('#user-list');
-            if (users.length === 0) {
-                list.innerHTML = '<p class="text-center text-gray-500 text-sm py-4">No hay usuarios registrados</p>';
-                return;
-            }
-            list.innerHTML = users.map(user => `
-                <button class="w-full text-left px-4 py-3 border border-gray-200 rounded-lg hover:bg-green-50 hover:border-green-300 transition-colors flex items-center gap-3" data-user-id="${user.id}">
-                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <span class="text-green-700 font-semibold text-sm">${escapeHtml(user.name[0]?.toUpperCase() || '?')}</span>
-                    </div>
-                    <span class="font-medium text-gray-900">${escapeHtml(user.name)}</span>
-                </button>
-            `).join('');
+        async function loadCurrentSession() {
+            if (demoMode || !sbClient) return null;
             
-            // Event listeners para cada usuario
-            $$('#user-list button[data-user-id]').forEach(btn => {
-                btn.onclick = () => selectUser(btn.dataset.userId);
-            });
-        }
-
-        function selectUser(userId) {
-            const user = users.find(u => u.id === userId);
-            if (user) {
-                currentUser = { id: user.id, name: user.name };
-                saveCurrentUser();
-                closeLoginModal();
-                showToast(`Bienvenido, ${user.name}`, 'success');
-                // Pequeño delay para asegurar que el modal se cierre antes de mostrar la app
-                setTimeout(() => checkLoginAndInit(), 50);
+            const { data: { session } } = await sbClient.auth.getSession();
+            currentSession = session;
+            
+            if (session?.user) {
+                // Cargar perfil del usuario
+                const { data: profile, error } = await sbClient
+                    .from('profiles')
+                    .select('*, sedes(nombre)')
+                    .eq('id', session.user.id)
+                    .single();
+                
+                if (!error && profile) {
+                    currentProfile = {
+                        id: profile.id,
+                        name: profile.nombre,
+                        email: profile.email,
+                        sede_id: profile.sede_id,
+                        sede_nombre: profile.sedes?.nombre || 'Sin sede',
+                        role: profile.role || 'operador'
+                    };
+                }
+            } else {
+                currentProfile = null;
             }
+            return currentProfile;
         }
 
-        async function createUser(name) {
-            const trimmed = name.trim();
-            if (!trimmed) return;
-            const newUser = {
-                id: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-                name: trimmed,
-                created_at: new Date().toISOString()
-            };
-            users.push(newUser);
-            saveUsers();
-            await saveUserToSupabase(newUser);
-            renderUserList();
-            $('#new-user-name').value = '';
-            selectUser(newUser.id);
+        async function signIn(email, password) {
+            if (!sbClient) throw new Error('No hay conexión a Supabase');
+            const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            return data;
         }
 
-        function openLoginModal() {
-            const modal = $('#login-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            modal.style.display = 'flex';
-            // Forzar reflow
-            modal.offsetHeight;
-            renderUserList();
-            $('#new-user-name').focus();
+        async function signUp(email, password, nombre, sede_id) {
+            if (!sbClient) throw new Error('No hay conexión a Supabase');
+            
+            // 1. Crear usuario en Auth
+            const { data: authData, error: authError } = await sbClient.auth.signUp({
+                email,
+                password,
+                options: { data: { nombre } }
+            });
+            if (authError) throw authError;
+            
+            // 2. Crear perfil en tabla profiles
+            if (authData.user) {
+                const { error: profileError } = await sbClient.from('profiles').insert({
+                    id: authData.user.id,
+                    email,
+                    nombre,
+                    sede_id,
+                    role: 'operador'
+                });
+                if (profileError) throw profileError;
+            }
+            
+            return authData;
         }
 
-        function closeLoginModal() {
-            const modal = $('#login-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            modal.style.display = 'none';
-            // Forzar reflow para asegurar que se oculte
-            modal.offsetHeight;
+        async function signOut() {
+            if (sbClient) {
+                await sbClient.auth.signOut();
+            }
+            currentSession = null;
+            currentProfile = null;
         }
 
         function updateUserBadge() {
             const badge = $('#user-badge');
             const nameEl = $('#current-user-name');
-            if (currentUser) {
-                nameEl.textContent = currentUser.name;
+            const sedeEl = $('#current-user-sede');
+            if (currentProfile) {
+                nameEl.textContent = currentProfile.name;
+                if (sedeEl) sedeEl.textContent = currentProfile.sede_nombre;
                 badge.classList.remove('hidden');
                 badge.classList.add('flex');
             } else {
@@ -699,13 +682,123 @@
             }
         }
 
-        function switchUser() {
-            currentUser = null;
-            saveCurrentUser();
+        function openLoginModal() {
+            const modal = $('#login-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.style.display = 'flex';
+            modal.offsetHeight;
+            showLoginForm();
+            $('#login-email').focus();
+        }
+
+        function closeLoginModal() {
+            const modal = $('#login-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.style.display = 'none';
+            modal.offsetHeight;
+            $('#login-error').classList.add('hidden');
+            $('#login-error').textContent = '';
+        }
+
+        function showLoginForm() {
+            $('#login-form').classList.remove('hidden');
+            $('#register-form').classList.add('hidden');
+            $('#show-register-btn').classList.remove('hidden');
+        }
+
+        function showRegisterForm() {
+            $('#login-form').classList.add('hidden');
+            $('#register-form').classList.remove('hidden');
+            $('#show-register-btn').classList.add('hidden');
+        }
+
+        async function handleLogin() {
+            const email = $('#login-email').value.trim();
+            const password = $('#login-password').value;
+            const errorEl = $('#login-error');
+            
+            if (!email || !password) {
+                errorEl.textContent = 'Completa email y contraseña';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            
+            errorEl.classList.add('hidden');
+            $('#login-btn').disabled = true;
+            $('#login-btn').innerHTML = `
+                <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Entrando...
+            `;
+            
+            try {
+                await signIn(email, password);
+                await loadCurrentSession();
+                closeLoginModal();
+                showToast(`Bienvenido, ${currentProfile.name}`, 'success');
+                checkLoginAndInit();
+            } catch (err) {
+                errorEl.textContent = err.message.includes('Invalid login credentials') 
+                    ? 'Email o contraseña incorrectos' 
+                    : err.message;
+                errorEl.classList.remove('hidden');
+            } finally {
+                $('#login-btn').disabled = false;
+                $('#login-btn').innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m4 4H7m14 0l-4 4m0 0l-4-4m4 4H3"></path></svg>
+                    Iniciar Sesión
+                `;
+            }
+        }
+
+        async function handleRegister() {
+            const email = $('#reg-email').value.trim();
+            const password = $('#reg-password').value;
+            const nombre = $('#reg-name').value.trim();
+            const sede_id = $('#reg-sede').value;
+            const errorEl = $('#login-error');
+            
+            if (!email || !password || !nombre || !sede_id) {
+                errorEl.textContent = 'Completa todos los campos';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            if (password.length < 6) {
+                errorEl.textContent = 'La contraseña debe tener al menos 6 caracteres';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            
+            errorEl.classList.add('hidden');
+            $('#register-btn').disabled = true;
+            $('#register-btn').textContent = 'Creando...';
+            
+            try {
+                await signUp(email, password, nombre, sede_id);
+                showToast('Usuario creado correctamente. Ahora inicia sesión.', 'success');
+                showLoginForm();
+                $('#reg-email').value = '';
+                $('#reg-password').value = '';
+                $('#reg-name').value = '';
+                $('#reg-sede').value = '';
+            } catch (err) {
+                errorEl.textContent = err.message.includes('User already registered') 
+                    ? 'Este email ya está registrado' 
+                    : err.message;
+                errorEl.classList.remove('hidden');
+            } finally {
+                $('#register-btn').disabled = false;
+                $('#register-btn').textContent = 'Crear Usuario';
+            }
+        }
+
+        async function switchUser() {
+            await signOut();
+            currentProfile = null;
             updateUserBadge();
             const app = $('#app');
             app.classList.add('hidden');
-            // Pequeño delay para asegurar que la app se oculte antes de mostrar el modal
             setTimeout(() => openLoginModal(), 50);
         }
 
@@ -746,7 +839,8 @@
                 cedula,
                 nombre,
                 action,
-                user: currentUser?.name || null,
+                user: currentProfile?.name || currentUser?.name || null,
+                sede: currentProfile?.sede_nombre || null,
                 timestamp: new Date().toISOString()
             };
             activityLog.unshift(entry);
@@ -771,7 +865,8 @@
                             <span class="px-2 py-0.5 text-xs font-medium rounded-full ${entry.action === 'REGISTRO' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
                                 ${entry.action === 'REGISTRO' ? 'Registrado' : 'Consulta'}
                             </span>
-                            ${entry.user ? `<span class="text-xs text-gray-500 whitespace-nowrap">${escapeHtml(entry.user)}</span>` : ''}
+                            ${entry.user ? `<span class="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-700">${escapeHtml(entry.user)}</span>` : ''}
+                            ${entry.sede ? `<span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700">${escapeHtml(entry.sede)}</span>` : ''}
                             <span class="text-xs text-gray-400 whitespace-nowrap">${formatDate(entry.timestamp).split(', ')[1]}</span>
                         </div>
                     </div>
@@ -888,8 +983,31 @@ function updateStats() {
         }
 
         async function checkLoginAndInit() {
-            await loadUsers();
-            if (currentUser) {
+            if (demoMode) {
+                // Demo mode: usar localStorage como antes
+                await loadUsers();
+                if (currentUser) {
+                    updateUserBadge();
+                    const app = $('#app');
+                    const modal = $('#login-modal');
+                    app.classList.remove('hidden');
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    modal.style.display = 'none';
+                    app.offsetHeight;
+                    $('#cedula-input').focus();
+                } else {
+                    $('#app').classList.add('hidden');
+                    openLoginModal();
+                }
+                return;
+            }
+            
+            // Modo Supabase: verificar sesión de Auth
+            await loadCurrentSession();
+            await loadSedes();
+            
+            if (currentProfile) {
                 updateUserBadge();
                 const app = $('#app');
                 const modal = $('#login-modal');
@@ -897,9 +1015,18 @@ function updateStats() {
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
                 modal.style.display = 'none';
-                // Forzar reflow
                 app.offsetHeight;
                 $('#cedula-input').focus();
+                
+                // Escuchar cambios de auth
+                sbClient.auth.onAuthStateChange((event, session) => {
+                    if (event === 'SIGNED_OUT' || !session) {
+                        currentProfile = null;
+                        updateUserBadge();
+                        $('#app').classList.add('hidden');
+                        openLoginModal();
+                    }
+                });
             } else {
                 $('#app').classList.add('hidden');
                 openLoginModal();
@@ -940,13 +1067,14 @@ function updateStats() {
         }
 
         function setupRealtime() {
+            // Canal principal: padron
             channel = sbClient.channel('padron-changes')
                 .on('postgres_changes', {
                     event: '*',
                     schema: 'public',
                     table: 'padron'
                 }, (payload) => {
-                    console.log('Realtime event:', payload);
+                    console.log('Realtime padron:', payload);
                     updateStats();
                     const currentCedula = $('#cedula-input').value.trim();
                     if (currentCedula && payload.new && payload.new.cedula === currentCedula) {
@@ -954,12 +1082,41 @@ function updateStats() {
                     }
                 })
                 .subscribe((status, err) => {
-                    console.log('Realtime status:', status);
+                    console.log('Realtime padron status:', status);
                     if (status === 'CHANNEL_ERROR' || err) {
                         console.error('Realtime error:', err);
-                        showToast('Realtime no disponible. Ejecuta en SQL: alter publication supabase_realtime add table padron;', 'warning', 8000);
+                        showToast('Realtime no disponible. Ejecuta en SQL: alter publication supabase_realtime add table padron, profiles, sedes;', 'warning', 8000);
                     }
                 });
+
+            // Canal para perfiles (cambios de usuario/sede)
+            const profilesChannel = sbClient.channel('profiles-changes')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'profiles'
+                }, (payload) => {
+                    console.log('Realtime profiles:', payload);
+                    // Si es mi perfil, recargar
+                    if (currentProfile && payload.new && payload.new.id === currentProfile.id) {
+                        loadCurrentSession().then(() => {
+                            updateUserBadge();
+                        });
+                    }
+                })
+                .subscribe();
+
+            // Canal para sedes
+            const sedesChannel = sbClient.channel('sedes-changes')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'sedes'
+                }, (payload) => {
+                    console.log('Realtime sedes:', payload);
+                    loadSedes();
+                })
+                .subscribe();
         }
 
         // ============================================
@@ -969,7 +1126,8 @@ function updateStats() {
             const cleanCedula = cedula.trim();
             if (!cleanCedula) return;
 
-            if (!currentUser) {
+            const isLoggedIn = demoMode ? currentUser : currentProfile;
+            if (!isLoggedIn) {
                 showToast('Debes iniciar sesión primero', 'warning');
                 openLoginModal();
                 return;
@@ -1480,7 +1638,7 @@ function showResultRegistered(voter) {
 
             try {
                 const now = new Date().toISOString();
-                const registradoPor = currentUser?.name || 'Desconocido';
+                const registradoPor = currentProfile?.name || currentUser?.name || 'Desconocido';
                 
                 if (demoMode) {
                     await new Promise(r => setTimeout(r, 200));
@@ -2067,10 +2225,16 @@ function showResultRegistered(voter) {
                 input.click();
             };
 
-            // Login modal
-            $('#create-user').onclick = () => createUser($('#new-user-name').value);
-            $('#new-user-name').onkeydown = (e) => {
-                if (e.key === 'Enter') createUser($('#new-user-name').value);
+            // Login modal (Auth)
+            $('#login-btn').onclick = handleLogin;
+            $('#login-email, #login-password').onkeydown = (e) => {
+                if (e.key === 'Enter') handleLogin();
+            };
+            $('#show-register-btn').onclick = showRegisterForm;
+            $('#show-login-btn').onclick = showLoginForm;
+            $('#register-btn').onclick = handleRegister;
+            $('#reg-email, #reg-password, #reg-name, #reg-sede').onkeydown = (e) => {
+                if (e.key === 'Enter') handleRegister();
             };
             $('#switch-user').onclick = switchUser;
 
