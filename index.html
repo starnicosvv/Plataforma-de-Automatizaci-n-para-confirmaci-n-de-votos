@@ -494,6 +494,7 @@
         const DEMO_KEY = 'padron_demo_data';
         const USERS_KEY = 'padron_users';
         const CURRENT_USER_KEY = 'padron_current_user';
+        const ACTIVITY_LOG_KEY = 'padron_activity_log';
         let sbClient = null;
         let channel = null;
         let activityLog = [];
@@ -870,8 +871,10 @@
                 timestamp: new Date().toISOString()
             };
             activityLog.unshift(entry);
-            if (activityLog.length > 50) activityLog.pop();
+            if (activityLog.length > 500) activityLog.pop();
             renderActivity();
+            saveActivityLog();
+            saveActivityLogToSupabase(entry);
         }
 
         function renderActivity() {
@@ -982,6 +985,40 @@ function updateStats() {
         function saveDemoData() {
             const arr = Array.from(demoData.values());
             localStorage.setItem(DEMO_KEY, JSON.stringify(arr));
+        }
+
+        function loadActivityLog() {
+            const saved = localStorage.getItem(ACTIVITY_LOG_KEY);
+            if (saved) {
+                try {
+                    activityLog = JSON.parse(saved);
+                } catch {
+                    activityLog = [];
+                }
+            }
+        }
+
+        function saveActivityLog() {
+            // Keep only last 500 entries in localStorage
+            const toSave = activityLog.slice(0, 500);
+            localStorage.setItem(ACTIVITY_LOG_KEY, JSON.stringify(toSave));
+        }
+
+        async function saveActivityLogToSupabase(entry) {
+            if (demoMode || !sbClient) return;
+            try {
+                const { error } = await sbClient.from('activity_log').insert({
+                    cedula: entry.cedula,
+                    nombre: entry.nombre,
+                    accion: entry.action,
+                    usuario: entry.user,
+                    sede: entry.sede,
+                    timestamp: entry.timestamp
+                });
+                if (error) console.error('Error saving activity to Supabase:', error);
+            } catch (err) {
+                console.error('Error saving activity to Supabase:', err);
+            }
         }
 
         function enableDemoMode() {
@@ -2287,6 +2324,7 @@ function showResultRegistered(voter) {
         // ============================================
         async function init() {
             initEvents();
+            loadActivityLog();
 
             // Online/Offline detection
             window.addEventListener('online', () => {
