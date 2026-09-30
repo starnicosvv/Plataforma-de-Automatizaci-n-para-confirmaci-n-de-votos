@@ -630,9 +630,9 @@
                         sede_nombre: sede_nombre,
                         role: profile.role || 'operador'
                     };
-                } else if (error) {
-                    console.error('Error loading profile:', error);
-                    // Intentar crear perfil si no existe (trigger puede haber fallado)
+                } else if (error && error.code === 'PGRST116') {
+                    // No profile found (trigger may have failed) - create it
+                    console.log('Profile not found, creating...');
                     const { error: insertError } = await sbClient
                         .from('profiles')
                         .insert({
@@ -642,9 +642,12 @@
                             role: 'operador'
                         });
                     if (!insertError) {
-                        // Recargar
                         return loadCurrentSession();
+                    } else {
+                        console.error('Error creating profile:', insertError);
                     }
+                } else if (error) {
+                    console.error('Error loading profile:', error);
                 }
             } else {
                 currentProfile = null;
