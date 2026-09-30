@@ -603,22 +603,48 @@
             currentSession = session;
             
             if (session?.user) {
-                // Cargar perfil del usuario
+                // Cargar perfil del usuario - sin join para evitar problemas de RLS
                 const { data: profile, error } = await sbClient
                     .from('profiles')
-                    .select('*, sedes(nombre)')
+                    .select('*')
                     .eq('id', session.user.id)
                     .single();
                 
                 if (!error && profile) {
+                    // Cargar sede por separado
+                    let sede_nombre = 'Sin sede';
+                    if (profile.sede_id) {
+                        const { data: sede } = await sbClient
+                            .from('sedes')
+                            .select('nombre')
+                            .eq('id', profile.sede_id)
+                            .single();
+                        sede_nombre = sede?.nombre || 'Sin sede';
+                    }
+                    
                     currentProfile = {
                         id: profile.id,
                         name: profile.nombre,
                         email: profile.email,
                         sede_id: profile.sede_id,
-                        sede_nombre: profile.sedes?.nombre || 'Sin sede',
+                        sede_nombre: sede_nombre,
                         role: profile.role || 'operador'
                     };
+                } else if (error) {
+                    console.error('Error loading profile:', error);
+                    // Intentar crear perfil si no existe (trigger puede haber fallado)
+                    const { error: insertError } = await sbClient
+                        .from('profiles')
+                        .insert({
+                            id: session.user.id,
+                            email: session.user.email,
+                            nombre: session.user.user_metadata?.nombre || session.user.email.split('@')[0],
+                            role: 'operador'
+                        });
+                    if (!insertError) {
+                        // Recargar
+                        return loadCurrentSession();
+                    }
                 }
             } else {
                 currentProfile = null;
@@ -636,7 +662,7 @@
         async function signUp(email, password, nombre, sede_id) {
             if (!sbClient) throw new Error('No hay conexión a Supabase');
             
-            // 1. Crear usuario en Auth
+            // 1. Crear usuario en Auth (el trigger crea el perfil automáticamente)
             const { data: authData, error: authError } = await sbClient.auth.signUp({
                 email,
                 password,
@@ -644,16 +670,13 @@
             });
             if (authError) throw authError;
             
-            // 2. Crear perfil en tabla profiles
-            if (authData.user) {
-                const { error: profileError } = await sbClient.from('profiles').insert({
-                    id: authData.user.id,
-                    email,
-                    nombre,
-                    sede_id,
-                    role: 'operador'
-                });
-                if (profileError) throw profileError;
+            // 2. Actualizar perfil con sede (el trigger ya creó el perfil básico)
+            if (authData.user && sede_id) {
+                const { error: updateError } = await sbClient
+                    .from('profiles')
+                    .update({ sede_id })
+                    .eq('id', authData.user.id);
+                if (updateError) throw updateError;
             }
             
             return authData;
