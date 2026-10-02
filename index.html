@@ -1323,7 +1323,7 @@ function updateStats() {
         }
 
         function showResultCanRegister(voter) {
-            const ordenMesaBoxes = (voter.orden || voter.mesa) ? `
+            const infoBoxes = `
                 <div class="flex gap-4 justify-center mb-4 flex-wrap">
                     ${voter.orden ? `
                         <div class="bg-white border-2 border-green-300 rounded-xl px-6 py-3 min-w-[120px] shadow-sm">
@@ -1337,10 +1337,15 @@ function updateStats() {
                             <p id="copy-mesa" class="text-2xl md:text-3xl font-bold text-blue-700 font-mono copyable" title="Click para copiar">${escapeHtml(String(voter.mesa))}</p>
                         </div>
                     ` : ''}
+                    ${voter.zona_votacion ? `
+                        <div class="bg-white border-2 border-purple-300 rounded-xl px-6 py-3 min-w-[180px] shadow-sm">
+                            <p class="text-xs text-gray-500 uppercase tracking-wider mb-0.5">ZONA VOTACIÓN</p>
+                            <p id="copy-zona" class="text-lg md:text-xl font-bold text-purple-700 copyable" title="Click para copiar">${escapeHtml(voter.zona_votacion)}</p>
+                        </div>
+                    ` : ''}
                 </div>
-            ` : '';
+            `;
             const referenteInfo = voter.referente ? `<p class="text-xs text-gray-400 mt-2">Referente: <span class="font-medium text-gray-600">${escapeHtml(voter.referente)}</span></p>` : '';
-            const zonaInfo = voter.zona_votacion ? `<p class="text-xs text-gray-400 mt-2">Zona: <span class="font-medium text-gray-600">${escapeHtml(voter.zona_votacion)}</span></p>` : '';
             $('#result-card').innerHTML = `
                 <div class="bg-green-50 border-2 border-green-200 rounded-2xl p-6 md:p-8 text-center pulse-green">
                     <div class="w-20 h-20 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
@@ -1349,9 +1354,8 @@ function updateStats() {
                     <p class="text-sm text-gray-500 uppercase tracking-wider mb-1">PERSONA HABILITADA</p>
                     <h3 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">${escapeHtml(voter.nombre)}</h3>
                     <p class="text-gray-500 mb-3">Cédula: <span id="copy-cedula" class="font-mono font-medium text-gray-700 copyable" title="Click para copiar">${escapeHtml(voter.cedula)}</span></p>
-                    ${ordenMesaBoxes}
+                    ${infoBoxes}
                     ${referenteInfo}
-                    ${zonaInfo}
                     <button id="vote-btn" class="w-full md:w-64 mx-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-8 rounded-xl text-lg transition-colors flex items-center justify-center gap-2">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         REGISTRAR
@@ -1359,15 +1363,16 @@ function updateStats() {
                 </div>
             `;
             $('#vote-btn').onclick = () => registerVote(voter.cedula, voter.nombre);
-            $('#copy-cedula').onclick = () => copyToClipboard(voter.cedula, 'Cédula copiada');
+$('#copy-cedula').onclick = () => copyToClipboard(voter.cedula, 'Cédula copiada');
             if (voter.orden) $('#copy-orden').onclick = () => copyToClipboard(String(voter.orden), 'Orden copiado');
             if (voter.mesa) $('#copy-mesa').onclick = () => copyToClipboard(String(voter.mesa), 'Mesa copiada');
+            if (voter.zona_votacion) $('#copy-zona').onclick = () => copyToClipboard(voter.zona_votacion, 'Zona copiada');
             $('#activity-section').classList.remove('hidden');
         }
 
-function showResultRegistered(voter) {
+        function showResultRegistered(voter) {
             const registradoPor = voter.registrado_por ? ` por <strong>${escapeHtml(voter.registrado_por)}</strong>` : '';
-            const ordenMesaBoxes = (voter.orden || voter.mesa) ? `
+            const infoBoxes = `
                 <div class="flex gap-4 justify-center mb-4 flex-wrap">
                     ${voter.orden ? `
                         <div class="bg-white border-2 border-green-300 rounded-xl px-6 py-3 min-w-[120px] shadow-sm">
@@ -1381,10 +1386,15 @@ function showResultRegistered(voter) {
                             <p id="copy-mesa" class="text-2xl md:text-3xl font-bold text-blue-700 font-mono copyable" title="Click para copiar">${escapeHtml(String(voter.mesa))}</p>
                         </div>
                     ` : ''}
+                    ${voter.zona_votacion ? `
+                        <div class="bg-white border-2 border-purple-300 rounded-xl px-6 py-3 min-w-[180px] shadow-sm">
+                            <p class="text-xs text-gray-500 uppercase tracking-wider mb-0.5">ZONA VOTACIÓN</p>
+                            <p id="copy-zona" class="text-lg md:text-xl font-bold text-purple-700 copyable" title="Click para copiar">${escapeHtml(voter.zona_votacion)}</p>
+                        </div>
+                    ` : ''}
                 </div>
-            ` : '';
+            `;
             const referenteInfo = voter.referente ? `<p class="text-xs text-gray-400 mt-2">Referente: <span class="font-medium text-gray-600">${escapeHtml(voter.referente)}</span></p>` : '';
-            const zonaInfo = voter.zona_votacion ? `<p class="text-xs text-gray-400 mt-2">Zona: <span class="font-medium text-gray-600">${escapeHtml(voter.zona_votacion)}</span></p>` : '';
             $('#result-card').innerHTML = `
                 <div class="bg-red-50 border-2 border-red-200 rounded-2xl p-6 md:p-8 text-center shake">
                     <div class="w-20 h-20 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
@@ -1394,9 +1404,8 @@ function showResultRegistered(voter) {
                     <h3 class="text-2xl md:text-3xl font-bold text-red-700 mb-2">ESTA PERSONA YA ESTÁ REGISTRADA</h3>
                     <p class="text-gray-900 text-xl font-medium mb-4">${escapeHtml(voter.nombre)}</h3>
                     <p class="text-gray-500 mb-3">Cédula: <span id="copy-cedula" class="font-mono font-medium text-gray-700 copyable" title="Click para copiar">${escapeHtml(voter.cedula)}</span></p>
-                    ${ordenMesaBoxes}
+                    ${infoBoxes}
                     ${referenteInfo}
-                    ${zonaInfo}
                     <div class="bg-red-100 rounded-xl p-4 inline-block">
                         <p class="text-sm text-gray-600">Fecha y hora de registro${registradoPor}:</p>
                         <p class="text-lg font-mono font-bold text-red-800 mt-1">${formatDate(voter.fecha_registro)}</p>
@@ -1410,6 +1419,7 @@ function showResultRegistered(voter) {
             $('#copy-cedula').onclick = () => copyToClipboard(voter.cedula, 'Cédula copiada');
             if (voter.orden) $('#copy-orden').onclick = () => copyToClipboard(String(voter.orden), 'Orden copiado');
             if (voter.mesa) $('#copy-mesa').onclick = () => copyToClipboard(String(voter.mesa), 'Mesa copiada');
+            if (voter.zona_votacion) $('#copy-zona').onclick = () => copyToClipboard(voter.zona_votacion, 'Zona copiada');
             $('#activity-section').classList.remove('hidden');
         }
 
@@ -1862,7 +1872,7 @@ function showResultRegistered(voter) {
                 addActivity(cedula, nombre, 'REGISTRO');
 
                 const voter = demoMode ? demoData.get(cedula) : null;
-                const ordenMesaBoxes = ((voter?.orden || voter?.mesa) || (orden || mesa)) ? `
+                const infoBoxes = `
                     <div class="flex gap-4 justify-center mb-4 flex-wrap">
                         ${(voter?.orden || orden) ? `
                             <div class="bg-white border-2 border-green-300 rounded-xl px-6 py-3 min-w-[120px] shadow-sm">
@@ -1876,10 +1886,15 @@ function showResultRegistered(voter) {
                                 <p class="text-2xl md:text-3xl font-bold text-blue-700 font-mono">${escapeHtml(String(voter?.mesa || mesa))}</p>
                             </div>
                         ` : ''}
+                        ${(voter?.zona_votacion || zona) ? `
+                            <div class="bg-white border-2 border-purple-300 rounded-xl px-6 py-3 min-w-[180px] shadow-sm">
+                                <p class="text-xs text-gray-500 uppercase tracking-wider mb-0.5">ZONA VOTACIÓN</p>
+                                <p class="text-lg md:text-xl font-bold text-purple-700">${escapeHtml(voter?.zona_votacion || zona)}</p>
+                            </div>
+                        ` : ''}
                     </div>
-                ` : '';
+                `;
                 const referenteInfo = (voter?.referente || referente) ? `<p class="text-xs text-gray-400 mt-2">Referente: <span class="font-medium text-gray-600">${escapeHtml(voter?.referente || referente)}</span></p>` : '';
-                const zonaInfo = (voter?.zona_votacion || zona) ? `<p class="text-xs text-gray-400 mt-2">Zona: <span class="font-medium text-gray-600">${escapeHtml(voter?.zona_votacion || zona)}</span></p>` : '';
                 $('#result-card').innerHTML = `
                     <div class="bg-green-50 border-2 border-green-200 rounded-2xl p-6 md:p-8 text-center pulse-green">
                         <div class="w-20 h-20 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
@@ -1888,9 +1903,8 @@ function showResultRegistered(voter) {
                         <p class="text-sm text-gray-500 uppercase tracking-wider mb-1">REGISTRO CONFIRMADO</p>
                         <h3 class="text-3xl font-bold text-gray-900 mb-2">${escapeHtml(nombre)}</h3>
                         <p class="text-gray-500 mb-3">Cédula: <span class="font-mono font-medium text-gray-700">${escapeHtml(cedula)}</span></p>
-                        ${ordenMesaBoxes}
+                        ${infoBoxes}
                         ${referenteInfo}
-                        ${zonaInfo}
                         <p class="text-sm text-gray-500">Registrado por: <strong>${escapeHtml(registradoPor)}</strong></p>
                         <p class="text-sm text-green-700 font-medium mt-2">${formatDate(now)}</p>
                     </div>
