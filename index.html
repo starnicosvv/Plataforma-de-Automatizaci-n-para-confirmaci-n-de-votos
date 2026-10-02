@@ -2122,10 +2122,7 @@ $('#copy-cedula').onclick = () => copyToClipboard(voter.cedula, 'Cédula copiada
                                 orden: r.orden,
                                 mesa: r.mesa,
                                 referente: r.referente,
-                                zona_votacion: r.zona_votacion,
-                                ya_registrado: false,
-                                fecha_registro: null,
-                                registrado_por: null
+                                zona_votacion: r.zona_votacion
                             })), { onConflict: 'cedula' });
                         if (error) throw error;
                         success += batch.length;
