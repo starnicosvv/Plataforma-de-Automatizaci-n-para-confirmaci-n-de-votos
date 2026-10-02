@@ -170,10 +170,14 @@
                     <input type="number" id="unknown-mesa" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20" placeholder="N° mesa" min="1" autocomplete="off">
                 </div>
             </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Referente (opcional)</label>
-                <input type="text" id="unknown-referente" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20" placeholder="Nombre del referente" maxlength="50" autocomplete="off">
-            </div>
+<div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Referente (opcional)</label>
+                    <input type="text" id="unknown-referente" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20" placeholder="Nombre del referente" maxlength="50" autocomplete="off">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Zona de Votación (opcional)</label>
+                    <input type="text" id="unknown-zona" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus-ring focus:border-green-500 focus:ring-2 focus:ring-green-500/20" placeholder="Ej: Escuela N° 123, Colegio Nacional, etc." maxlength="100" autocomplete="off">
+                </div>
             <div class="flex gap-3">
                 <button id="confirm-unknown" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors">Registrar</button>
                 <button id="cancel-unknown" class="px-4 py-3 text-gray-600 hover:text-gray-800 font-medium">Cancelar</button>
@@ -249,6 +253,7 @@
                                 <th class="pb-2 px-2 font-medium">Orden</th>
                                 <th class="pb-2 px-2 font-medium">Mesa</th>
                                 <th class="pb-2 px-2 font-medium">Referente</th>
+                                <th class="pb-2 px-2 font-medium">Zona Votación</th>
                                 <th class="pb-2 px-2 font-medium">Estado</th>
                                 <th class="pb-2 px-2 font-medium">Fecha Registro</th>
                                 <th class="pb-2 px-2 font-medium">Registrado Por</th>
@@ -415,16 +420,16 @@
                 <h2 class="text-2xl font-bold text-gray-900">Cargar Padrón desde Excel</h2>
                 <button id="close-import" class="text-gray-400 hover:text-gray-600 text-2xl leading-none p-2" aria-label="Cerrar">&times;</button>
             </div>
-            <p class="text-gray-600 mb-4">Selecciona un archivo <code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">.xlsx</code> con las columnas <strong>cedula</strong> y <strong>nombre</strong> (opcional: <strong>orden</strong>, <strong>mesa</strong>, <strong>referente</strong>). Se usará <code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">upsert</code> para evitar duplicados.</p>
+            <p class="text-gray-600 mb-4">Selecciona un archivo <code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">.xlsx</code> con las columnas <strong>cedula</strong> y <strong>nombre</strong> (opcional: <strong>orden</strong>, <strong>mesa</strong>, <strong>referente</strong>, <strong>zona_votacion</strong>). Se usará <code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">upsert</code> para evitar duplicados.</p>
             <details class="mb-4 group">
                 <summary class="text-sm text-blue-600 hover:text-blue-800 cursor-pointer font-medium flex items-center gap-1">
                     <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     Ver formato de columnas esperado
                 </summary>
                 <div class="mt-2 p-3 bg-gray-50 rounded-lg text-xs font-mono overflow-x-auto">
-                    <pre class="text-gray-700">cedula, nombre, orden, mesa, referente
-1234567, Juan Pérez, 1, 101, Carlos R.
-8765432, María López, 2, 101, Ana M.</pre>
+                    <pre class="text-gray-700">cedula, nombre, orden, mesa, referente, zona_votacion
+1234567, Juan Pérez, 1, 101, Carlos R., Escuela N° 123
+8765432, María López, 2, 101, Ana M., Colegio Nacional</pre>
                 </div>
             </details>
             <div class="mb-4">
@@ -450,6 +455,7 @@
                                     <th class="pb-2 font-medium">Orden</th>
                                     <th class="pb-2 font-medium">Mesa</th>
                                     <th class="pb-2 font-medium">Referente</th>
+                                    <th class="pb-2 font-medium">Zona Votación</th>
                                 </tr>
                             </thead>
                             <tbody id="preview-rows"></tbody>
@@ -500,7 +506,7 @@
         let activityLog = [];
         let isImporting = false;
         let demoMode = false;
-        let demoData = new Map(); // cedula -> {cedula, nombre, orden, mesa, referente, ya_registrado, fecha_registro, registrado_por}
+        let demoData = new Map(); // cedula -> {cedula, nombre, orden, mesa, referente, zona_votacion, ya_registrado, fecha_registro, registrado_por}
         let users = []; // [{id, name, created_at}]
         let currentUser = null; // {id, name}
 
@@ -965,14 +971,14 @@ function updateStats() {
             // Si no hay datos, cargar datos de prueba
             if (demoData.size === 0) {
                 const sample = [
-                    { cedula: '12345678', nombre: 'Juan Pérez García', orden: 1, mesa: 101, referente: 'Carlos R.', ya_registrado: false, fecha_registro: null, registrado_por: null },
-                    { cedula: '87654321', nombre: 'María González López', orden: 2, mesa: 101, referente: 'Ana M.', ya_registrado: false, fecha_registro: null, registrado_por: null },
-                    { cedula: '11223344', nombre: 'Carlos Rodríguez Ruiz', orden: 3, mesa: 102, referente: 'Pedro J.', ya_registrado: true, fecha_registro: new Date(Date.now() - 3600000).toISOString(), registrado_por: 'Operador Demo' },
-                    { cedula: '44332211', nombre: 'Ana Martínez Fernández', orden: 4, mesa: 102, referente: 'Luis S.', ya_registrado: false, fecha_registro: null, registrado_por: null },
-                    { cedula: '55667788', nombre: 'Luis Sánchez Romero', orden: 5, mesa: 103, referente: 'María G.', ya_registrado: true, fecha_registro: new Date(Date.now() - 7200000).toISOString(), registrado_por: 'Operador Demo' },
-                    { cedula: '99887766', nombre: 'Laura Torres Molina', orden: 6, mesa: 103, referente: 'Sofía V.', ya_registrado: false, fecha_registro: null, registrado_por: null },
-                    { cedula: '11112222', nombre: 'Pedro Jiménez Herrera', orden: 7, mesa: 104, referente: 'Juan P.', ya_registrado: false, fecha_registro: null, registrado_por: null },
-                    { cedula: '33334444', nombre: 'Sofía Vargas Castro', orden: 8, mesa: 104, referente: 'Carlos R.', ya_registrado: false, fecha_registro: null, registrado_por: null },
+                    { cedula: '12345678', nombre: 'Juan Pérez García', orden: 1, mesa: 101, referente: 'Carlos R.', zona_votacion: 'Escuela N° 123', ya_registrado: false, fecha_registro: null, registrado_por: null },
+                    { cedula: '87654321', nombre: 'María González López', orden: 2, mesa: 101, referente: 'Ana M.', zona_votacion: 'Escuela N° 123', ya_registrado: false, fecha_registro: null, registrado_por: null },
+                    { cedula: '11223344', nombre: 'Carlos Rodríguez Ruiz', orden: 3, mesa: 102, referente: 'Pedro J.', zona_votacion: 'Colegio Nacional', ya_registrado: true, fecha_registro: new Date(Date.now() - 3600000).toISOString(), registrado_por: 'Operador Demo' },
+                    { cedula: '44332211', nombre: 'Ana Martínez Fernández', orden: 4, mesa: 102, referente: 'Luis S.', zona_votacion: 'Colegio Nacional', ya_registrado: false, fecha_registro: null, registrado_por: null },
+                    { cedula: '55667788', nombre: 'Luis Sánchez Romero', orden: 5, mesa: 103, referente: 'María G.', zona_votacion: 'Liceo Municipal', ya_registrado: true, fecha_registro: new Date(Date.now() - 7200000).toISOString(), registrado_por: 'Operador Demo' },
+                    { cedula: '99887766', nombre: 'Laura Torres Molina', orden: 6, mesa: 103, referente: 'Sofía V.', zona_votacion: 'Liceo Municipal', ya_registrado: false, fecha_registro: null, registrado_por: null },
+                    { cedula: '11112222', nombre: 'Pedro Jiménez Herrera', orden: 7, mesa: 104, referente: 'Juan P.', zona_votacion: 'Escuela Técnica', ya_registrado: false, fecha_registro: null, registrado_por: null },
+                    { cedula: '33334444', nombre: 'Sofía Vargas Castro', orden: 8, mesa: 104, referente: 'Carlos R.', zona_votacion: 'Escuela Técnica', ya_registrado: false, fecha_registro: null, registrado_por: null },
                 ];
                 sample.forEach(v => demoData.set(v.cedula, v));
                 saveDemoData();
@@ -995,6 +1001,32 @@ function updateStats() {
                 } catch {
                     activityLog = [];
                 }
+            }
+        }
+
+        async function loadActivityLogFromSupabase() {
+            if (demoMode || !sbClient) return;
+            try {
+                const { data, error } = await sbClient
+                    .from('activity_log')
+                    .select('*')
+                    .order('timestamp', { ascending: false })
+                    .limit(500);
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    activityLog = data.map(row => ({
+                        id: row.id,
+                        cedula: row.cedula,
+                        nombre: row.nombre,
+                        action: row.accion,
+                        user: row.usuario,
+                        sede: row.sede,
+                        timestamp: row.timestamp
+                    }));
+                    renderActivity();
+                }
+            } catch (err) {
+                console.error('Error loading activity log from Supabase:', err);
             }
         }
 
@@ -1049,6 +1081,8 @@ function updateStats() {
             if (demoMode) {
                 // Demo mode: usar localStorage como antes
                 await loadUsers();
+                loadActivityLog();
+                renderActivity();
                 if (currentUser) {
                     updateUserBadge();
                     const app = $('#app');
@@ -1080,6 +1114,9 @@ function updateStats() {
                 modal.style.display = 'none';
                 app.offsetHeight;
                 $('#cedula-input').focus();
+                
+                // Cargar log de actividad desde Supabase
+                await loadActivityLogFromSupabase();
                 
                 // Escuchar cambios de auth
                 sbClient.auth.onAuthStateChange((event, session) => {
@@ -1148,7 +1185,7 @@ function updateStats() {
                     console.log('Realtime padron status:', status);
                     if (status === 'CHANNEL_ERROR' || err) {
                         console.error('Realtime error:', err);
-                        showToast('Realtime no disponible. Ejecuta en SQL: alter publication supabase_realtime add table padron, profiles, sedes;', 'warning', 8000);
+                        showToast('Realtime no disponible. Ejecuta en SQL: alter publication supabase_realtime add table padron, profiles, sedes, activity_log;', 'warning', 8000);
                     }
                 });
 
@@ -1178,6 +1215,34 @@ function updateStats() {
                 }, (payload) => {
                     console.log('Realtime sedes:', payload);
                     loadSedes();
+                })
+                .subscribe();
+
+            // Canal para activity_log (log de actividad en tiempo real)
+            const activityChannel = sbClient.channel('activity-log-changes')
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'activity_log'
+                }, (payload) => {
+                    console.log('Realtime activity_log:', payload);
+                    if (payload.new) {
+                        const entry = {
+                            id: payload.new.id,
+                            cedula: payload.new.cedula,
+                            nombre: payload.new.nombre,
+                            action: payload.new.accion,
+                            user: payload.new.usuario,
+                            sede: payload.new.sede,
+                            timestamp: payload.new.timestamp
+                        };
+                        // Evitar duplicados si ya está en el log local
+                        if (!activityLog.some(e => e.id === entry.id)) {
+                            activityLog.unshift(entry);
+                            if (activityLog.length > 500) activityLog.pop();
+                            renderActivity();
+                        }
+                    }
                 })
                 .subscribe();
         }
@@ -1275,6 +1340,7 @@ function updateStats() {
                 </div>
             ` : '';
             const referenteInfo = voter.referente ? `<p class="text-xs text-gray-400 mt-2">Referente: <span class="font-medium text-gray-600">${escapeHtml(voter.referente)}</span></p>` : '';
+            const zonaInfo = voter.zona_votacion ? `<p class="text-xs text-gray-400 mt-2">Zona: <span class="font-medium text-gray-600">${escapeHtml(voter.zona_votacion)}</span></p>` : '';
             $('#result-card').innerHTML = `
                 <div class="bg-green-50 border-2 border-green-200 rounded-2xl p-6 md:p-8 text-center pulse-green">
                     <div class="w-20 h-20 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
@@ -1285,6 +1351,7 @@ function updateStats() {
                     <p class="text-gray-500 mb-3">Cédula: <span id="copy-cedula" class="font-mono font-medium text-gray-700 copyable" title="Click para copiar">${escapeHtml(voter.cedula)}</span></p>
                     ${ordenMesaBoxes}
                     ${referenteInfo}
+                    ${zonaInfo}
                     <button id="vote-btn" class="w-full md:w-64 mx-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-8 rounded-xl text-lg transition-colors flex items-center justify-center gap-2">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         REGISTRAR
@@ -1317,6 +1384,7 @@ function showResultRegistered(voter) {
                 </div>
             ` : '';
             const referenteInfo = voter.referente ? `<p class="text-xs text-gray-400 mt-2">Referente: <span class="font-medium text-gray-600">${escapeHtml(voter.referente)}</span></p>` : '';
+            const zonaInfo = voter.zona_votacion ? `<p class="text-xs text-gray-400 mt-2">Zona: <span class="font-medium text-gray-600">${escapeHtml(voter.zona_votacion)}</span></p>` : '';
             $('#result-card').innerHTML = `
                 <div class="bg-red-50 border-2 border-red-200 rounded-2xl p-6 md:p-8 text-center shake">
                     <div class="w-20 h-20 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
@@ -1328,6 +1396,7 @@ function showResultRegistered(voter) {
                     <p class="text-gray-500 mb-3">Cédula: <span id="copy-cedula" class="font-mono font-medium text-gray-700 copyable" title="Click para copiar">${escapeHtml(voter.cedula)}</span></p>
                     ${ordenMesaBoxes}
                     ${referenteInfo}
+                    ${zonaInfo}
                     <div class="bg-red-100 rounded-xl p-4 inline-block">
                         <p class="text-sm text-gray-600">Fecha y hora de registro${registradoPor}:</p>
                         <p class="text-lg font-mono font-bold text-red-800 mt-1">${formatDate(voter.fecha_registro)}</p>
@@ -1410,9 +1479,10 @@ function showResultRegistered(voter) {
             const orden = parseInt($('#unknown-orden').value.trim()) || null;
             const mesa = parseInt($('#unknown-mesa').value.trim()) || null;
             const referente = $('#unknown-referente').value.trim() || null;
+            const zona = $('#unknown-zona').value.trim() || null;
             const cedula = pendingUnknownCedula;
             closeRegisterUnknownModal();
-            registerVote(cedula, nombre, true, orden, mesa, referente); // true = isUnknown
+            registerVote(cedula, nombre, true, orden, mesa, referente, zona); // true = isUnknown
         }
 
         // ============================================
@@ -1571,6 +1641,7 @@ function showResultRegistered(voter) {
                     <td class="py-2 px-2 text-gray-700">${v.orden != null ? escapeHtml(v.orden.toString()) : '-'}</td>
                     <td class="py-2 px-2 text-gray-700">${v.mesa != null ? escapeHtml(v.mesa.toString()) : '-'}</td>
                     <td class="py-2 px-2 text-gray-700">${escapeHtml(v.referente || '-')}</td>
+                    <td class="py-2 px-2 text-gray-700">${escapeHtml(v.zona_votacion || '-')}</td>
                     <td class="py-2 px-2">
                         <span class="px-2 py-0.5 text-xs font-medium rounded-full ${v.ya_registrado ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
                             ${v.ya_registrado ? 'Registrado' : 'Pendiente'}
@@ -1604,13 +1675,14 @@ function showResultRegistered(voter) {
                 showToast('No hay datos para exportar', 'warning');
                 return;
             }
-            const headers = ['Cédula', 'Nombre', 'Orden', 'Mesa', 'Referente', 'Registrado', 'Fecha Registro', 'Registrado Por'];
+            const headers = ['Cédula', 'Nombre', 'Orden', 'Mesa', 'Referente', 'Zona Votación', 'Registrado', 'Fecha Registro', 'Registrado Por'];
             const rows = data.map(v => [
                 v.cedula,
                 v.nombre,
                 v.orden != null ? v.orden.toString() : '',
                 v.mesa != null ? v.mesa.toString() : '',
                 v.referente || '',
+                v.zona_votacion || '',
                 v.ya_registrado ? 'Sí' : 'No',
                 v.fecha_registro ? formatDate(v.fecha_registro) : '',
                 v.registrado_por || ''
@@ -1689,7 +1761,7 @@ function showResultRegistered(voter) {
         // ============================================
         // REGISTRO
         // ============================================
-        async function registerVote(cedula, nombre, isUnknown = false, orden = null, mesa = null, referente = null) {
+        async function registerVote(cedula, nombre, isUnknown = false, orden = null, mesa = null, referente = null, zona = null) {
             const btn = $('#vote-btn');
             if (btn) {
                 btn.disabled = true;
@@ -1713,6 +1785,7 @@ function showResultRegistered(voter) {
                             orden,
                             mesa,
                             referente,
+                            zona_votacion: zona,
                             ya_registrado: true,
                             fecha_registro: now,
                             registrado_por: registradoPor
@@ -1723,6 +1796,7 @@ function showResultRegistered(voter) {
                             voter.ya_registrado = true;
                             voter.fecha_registro = now;
                             voter.registrado_por = registradoPor;
+                            if (zona) voter.zona_votacion = zona;
                             demoData.set(cedula, voter);
                         }
                     }
@@ -1740,17 +1814,18 @@ function showResultRegistered(voter) {
                         }
                         return;
                     }
-                    // Primero obtener el registro actual para preservar nombre, orden, mesa, referente
+                    // Primero obtener el registro actual para preservar nombre, orden, mesa, referente, zona_votacion
                     let existingNombre = nombre;
                     let existingOrden = orden;
                     let existingMesa = mesa;
                     let existingReferente = referente;
+                    let existingZona = zona;
                     
                     if (!isUnknown) {
                         try {
                             const { data: existing } = await sbClient
                                 .from('padron')
-                                .select('nombre, orden, mesa, referente')
+                                .select('nombre, orden, mesa, referente, zona_votacion')
                                 .eq('cedula', cedula)
                                 .single();
                             if (existing) {
@@ -1758,6 +1833,7 @@ function showResultRegistered(voter) {
                                 existingOrden = existing.orden;
                                 existingMesa = existing.mesa;
                                 existingReferente = existing.referente;
+                                if (!zona) existingZona = existing.zona_votacion;
                             }
                         } catch (e) {
                             console.warn('Could not fetch existing record:', e);
@@ -1770,6 +1846,7 @@ function showResultRegistered(voter) {
                         orden: existingOrden,
                         mesa: existingMesa,
                         referente: existingReferente,
+                        zona_votacion: existingZona,
                         ya_registrado: true,
                         fecha_registro: now,
                         registrado_por: registradoPor
@@ -1802,6 +1879,7 @@ function showResultRegistered(voter) {
                     </div>
                 ` : '';
                 const referenteInfo = (voter?.referente || referente) ? `<p class="text-xs text-gray-400 mt-2">Referente: <span class="font-medium text-gray-600">${escapeHtml(voter?.referente || referente)}</span></p>` : '';
+                const zonaInfo = (voter?.zona_votacion || zona) ? `<p class="text-xs text-gray-400 mt-2">Zona: <span class="font-medium text-gray-600">${escapeHtml(voter?.zona_votacion || zona)}</span></p>` : '';
                 $('#result-card').innerHTML = `
                     <div class="bg-green-50 border-2 border-green-200 rounded-2xl p-6 md:p-8 text-center pulse-green">
                         <div class="w-20 h-20 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
@@ -1812,6 +1890,7 @@ function showResultRegistered(voter) {
                         <p class="text-gray-500 mb-3">Cédula: <span class="font-mono font-medium text-gray-700">${escapeHtml(cedula)}</span></p>
                         ${ordenMesaBoxes}
                         ${referenteInfo}
+                        ${zonaInfo}
                         <p class="text-sm text-gray-500">Registrado por: <strong>${escapeHtml(registradoPor)}</strong></p>
                         <p class="text-sm text-green-700 font-medium mt-2">${formatDate(now)}</p>
                     </div>
@@ -1914,12 +1993,14 @@ function showResultRegistered(voter) {
                         const ordenKey = keys.find(k => k.toLowerCase() === 'orden');
                         const mesaKey = keys.find(k => k.toLowerCase() === 'mesa');
                         const referenteKey = keys.find(k => k.toLowerCase() === 'referente');
+                        const zonaKey = keys.find(k => k.toLowerCase() === 'zona_votacion' || k.toLowerCase() === 'zona');
                         return {
                             cedula: cedulaKey ? String(row[cedulaKey]).trim() : '',
                             nombre: nombreKey ? String(row[nombreKey]).trim() : '',
                             orden: ordenKey ? parseInt(String(row[ordenKey]).trim()) || null : null,
                             mesa: mesaKey ? parseInt(String(row[mesaKey]).trim()) || null : null,
-                            referente: referenteKey ? String(row[referenteKey]).trim() : null
+                            referente: referenteKey ? String(row[referenteKey]).trim() : null,
+                            zona_votacion: zonaKey ? String(row[zonaKey]).trim() : null
                         };
                     }).filter(row => row.cedula && row.nombre);
 
@@ -1937,6 +2018,7 @@ function showResultRegistered(voter) {
                             <td class="py-2 px-2 text-gray-700">${row.orden != null ? escapeHtml(row.orden.toString()) : '-'}</td>
                             <td class="py-2 px-2 text-gray-700">${row.mesa != null ? escapeHtml(row.mesa.toString()) : '-'}</td>
                             <td class="py-2 px-2 text-gray-700">${escapeHtml(row.referente || '-')}</td>
+                            <td class="py-2 px-2 text-gray-700">${escapeHtml(row.zona_votacion || '-')}</td>
                         </tr>
                     `).join('');
                     $('#preview-count').textContent = `Total de registros válidos: ${normalized.length.toLocaleString('es-ES')}${normalized.length > 5 ? ` (mostrando 5 de ${normalized.length})` : ''}`;
@@ -1990,6 +2072,7 @@ function showResultRegistered(voter) {
                             orden: row.orden != null ? row.orden : existing?.orden || null,
                             mesa: row.mesa != null ? row.mesa : existing?.mesa || null,
                             referente: row.referente || existing?.referente || null,
+                            zona_votacion: row.zona_votacion || existing?.zona_votacion || null,
                             ya_registrado: existing?.ya_registrado || false,
                             fecha_registro: existing?.fecha_registro || null,
                             registrado_por: existing?.registrado_por || null
@@ -2025,6 +2108,7 @@ function showResultRegistered(voter) {
                                 orden: r.orden,
                                 mesa: r.mesa,
                                 referente: r.referente,
+                                zona_votacion: r.zona_votacion,
                                 ya_registrado: false,
                                 fecha_registro: null,
                                 registrado_por: null
