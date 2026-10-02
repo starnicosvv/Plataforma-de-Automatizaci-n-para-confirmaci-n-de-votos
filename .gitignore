@@ -12,3 +12,13 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Node
+node_modules/
+package-lock.json
+package.json
+
+# Generated
+padron_importar.xlsx
+convert_excel.js
+temp_data.json
