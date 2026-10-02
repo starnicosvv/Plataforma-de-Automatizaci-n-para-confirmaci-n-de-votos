@@ -2126,7 +2126,7 @@ $('#copy-cedula').onclick = () => copyToClipboard(voter.cedula, 'Cédula copiada
                                 ya_registrado: false,
                                 fecha_registro: null,
                                 registrado_por: null
-                            })), { onConflict: 'cedula', ignoreDuplicates: true });
+                            })), { onConflict: 'cedula' });
                         if (error) throw error;
                         success += batch.length;
                     } catch (err) {
